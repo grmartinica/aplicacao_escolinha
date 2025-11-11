@@ -1,12 +1,12 @@
 from flask import Flask
-from aplicacao_escolhinha.config import Config
-from aplicacao_escolhinha.extensions import db, login_manager
-from aplicacao_escolhinha.routes.auth_routes import auth_bp
-from aplicacao_escolhinha.routes.atletas_routes import atletas_bp
-from aplicacao_escolhinha.routes.grupos_routes import grupos_bp
-from aplicacao_escolhinha.routes.atividades_routes import atividades_bp
-from aplicacao_escolhinha.routes.financeiro_routes import financeiro_bp
-from aplicacao_escolhinha.routes.dashboard_routes import dashboard_bp
+from aplicacao_escolinha.config import Config
+from aplicacao_escolinha.extensions import db, login_manager
+from aplicacao_escolinha.routes.auth_routes import auth_bp
+from aplicacao_escolinha.routes.atletas_routes import atletas_bp
+from aplicacao_escolinha.routes.grupos_routes import grupos_bp
+from aplicacao_escolinha.routes.atividades_routes import atividades_bp
+from aplicacao_escolinha.routes.financeiro_routes import financeiro_bp
+from aplicacao_escolinha.routes.dashboard_routes import dashboard_bp
 
 def create_app():
     app = Flask(__name__)

@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
-from aplicacao_escolhinha.extensions import db
-from aplicacao_escolhinha.models import Atleta, AtletaFoto
+from aplicacao_escolinha.extensions import db
+from aplicacao_escolinha.models import Atleta, AtletaFoto
 import base64, os
 
 atletas_bp = Blueprint('atletas', __name__, url_prefix='/atletas')

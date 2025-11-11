@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template
-from aplicacao_escolhinha.extensions import db
-from aplicacao_escolhinha.models import ContaReceber
+from aplicacao_escolinha.extensions import db
+from aplicacao_escolinha.models import ContaReceber
 
 financeiro_bp = Blueprint('financeiro', __name__, url_prefix='/financeiro')
 

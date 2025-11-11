@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
-from aplicacao_escolhinha.extensions import db
-from aplicacao_escolhinha.models import Atividade, Grupo
+from aplicacao_escolinha.extensions import db
+from aplicacao_escolinha.models import Atividade, Grupo
 
 atividade_bp = Blueprint('atividades', __name__, url_prefix='/atividades')
 
