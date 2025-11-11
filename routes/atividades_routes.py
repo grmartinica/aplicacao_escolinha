@@ -1,15 +1,16 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask_login import login_required
 from extensions import db
 from models import Atividade, Grupo
 
-atividade_bp = Blueprint('atividades', __name__, url_prefix='/atividades')
+atividades_bp = Blueprint('atividades', __name__, url_prefix='/atividades')
 
-@atividade_bp.route('/')
+@atividades_bp.route('/')
 def listar():
     atividades = Atividade.query.all()
     return render_template('atividades_listar.html', atividades=atividades)
 
-@atividade_bp.route('/novo', methods=['GET', 'POST'])
+@atividades_bp.route('/novo', methods=['GET', 'POST'])
 def nova():
     grupos = Grupo.query.all()
     if request.method == 'POST':
