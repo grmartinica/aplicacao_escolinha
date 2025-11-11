@@ -1,0 +1,30 @@
+{%extends "base.html" %}
+
+{% block title %}Painel de Professor{% endblock %}
+
+{% block content %}
+
+<h2>Atividades</h2>
+<a href="{{ url_for('atividades.nova') }}" class="btn">+ Nova Atividade</a>
+<br><br>
+<table class="table">
+    <tr>
+        <th>Título</th>
+        <th>Grupo</th>
+        <th>Data</th>
+        <th>Horário</th>
+        <th>Duração (min)</th>
+        <th>Local</th>
+    </tr>
+    {% for a in atividades %}
+    <tr>
+        <td>{{ a.titulo }}</td>
+        <td>{{ a.grupo.nome }}</td>
+        <td>{{ a.data.strftime('%d/%m/%Y') }}</td>
+        <td>{{ a.horario.strftime('%H:%M') }}</td>
+        <td>{{ a.duracao }}</td>
+        <td>{{ a.local }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Financeiro{% endblock %}
+
+{% block content %}
+
+<h2>Resumo Financeiro</h2>
+<p>Aqui você pode ver um resumo das finanças da escolinha.</p>
+
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-label"> Total a Receber</div>
+        <div class="kpi-value">R$ {{ '%.2f'|format(total_a_receber) }}</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label"> Total Recebido</div>
+        <div class="kpi-value">R$ {{ '%.2f'|format(total_recebido) }}</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Contas a Pagar</div>
+        <div class="kpi-value">R$ {{ '%.2f'|format(total_pagar) }}</div>
+    </div>
+</div>
+
+<h3>Mensalidades</h3>
+<table class="table">
+    <tr>
+        <th>ID</th>
+        <th>Atleta</th>
+        <th>Valor</th>
+        <th>Data de Vencimento</th>
+        <th>Status</th>
+        <th>Descrição</th>
+    </tr>
+    {% for c in contas %}
+    <tr>
+        <td>{{ c.id }}</td>
+        <td>{{ c.atleta.nome if c.atleta else '-'}}</td>
+        <td>R$ {{ '%.2f'|format(c.valor) }}</td>
+        <td>{{ c.vencimento.strftime('%d/%m/%Y') }}</td>
+        <td>{{ c.status }}</td>
+        <td>{{ c.descricao }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<h3>Contas a Pagar</h3>
+<table class="table">
+    <tr>
+        <th>ID</th>
+        <th>Fornecedor</th>
+        <th>Descrição</th>
+        <th>Vencimento</th>
+        <th>Valor</th>
+        <th>Status</th>
+    </tr>
+    {% for c in contas_pagar %}
+    <tr>
+        <td>{{ c.id }}</td>
+        <td>{{ c.fornecedor }}</td>
+        <td>{{ c.descricao }}</td>
+        <td>{{ c.vencimento.strftime('%d/%m/%Y') }}</td>
+        <td>R$ {{ '%.2f'|format(c.valor) }}</td>
+        <td>{{ c.status }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

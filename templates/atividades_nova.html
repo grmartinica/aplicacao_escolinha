@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Nova Atividade{% endblock %}
+
+{% block content %}
+
+<h2>Criar Nova Atividade</h2>
+<form method="POST">
+    <div class="form-group">
+        <label>Título da Atividade</label>
+        <input name="titulo" required>
+    </div>
+    <div class="form-group">
+        <label>Grupo (opcional)</label>
+        <select name="grupo_id">
+            <option value="">Selecione</option>
+            {% for g in grupos %}
+            <option value="{{ g.id }}">{{ g.nome }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group">
+        <label>Data</label>
+        <input type="date" name="data" required>
+    </div>
+    <div class="form-group">
+        <label>Horário Início</label>
+        <input type="time" name="hora_inicio" required>
+    </div>
+    <div class="form-group">
+        <label>Hora Fim (opcional)</label>
+        <input type="time" name="hora_fim">
+    </div>
+    <div class="form-group">
+        <label>Local</label>
+        <input name="local">
+    </div>
+    <div class="form-group">
+        <label>Descrição</label>
+        <textarea name="descricao"></textarea>
+    </div>
+    <button type="submit" class="btn-primary">Salvar Atividade</button>
+</form>
+{% endblock %}

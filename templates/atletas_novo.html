@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Novo atleta{% endblock %}
+
+{% block content %}
+
+<h2>Cadastro de Novo Atleta</h2>
+<form method="POST">
+    <div class="form-group">
+        <label>Nome</label>
+    </div>
+    <div class="form-group">
+        <label>Data de Nascimento</label>
+        <input type="date" name="data_nascimento" required>
+    </div>
+    <div class="form-group">
+        <label>Posição</label>
+        <input name="posicao">
+    </div>
+
+    <h3> Foto do Atleta</h3>
+    <video id="video" width="320" height="240" autoplay></video><br>
+    <button type="button" id="capture" class="btn-secondary">Caputrar Foto</button>
+    <canvas id="canvas" style="display:none;"></canvas>
+    <input type="hidden" name="foto_base64" id="foto_base64">
+
+    <br><br>
+    <button type="submit" class="btn-primary">Salvar Atleta</button>
+</form>
+<script src="{{ url_for('static', filename=js/camera.js) }}"></script>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Financeiro Responsável{% endblock %}
+
+{% block content %}
+
+<h2>Área Financeira do Responsável</h2>
+<p>Gerencie os pagamentos e as informações financeiras relacionadas ao seu filho aqui.</p>
+<table class="table">
+    <tr>
+        <th>Atleta</th>
+        <th>Descrição</th>
+        <th>Vencimento</th>
+        <th>Valor</th>
+        <th>Status</th>
+    </tr>
+    {% for c in contas %}
+    <tr>
+        <td>{{ c.atleta.nome if c.atleta else '-'}}</td>
+        <td>{{ c.descricao }}</td>
+        <td>{{ c.vencimento.strftime('%d/%m/%Y') }}</td>
+        <td>R$ {{ '%.2f'|format(c.valor) }}</td>
+        <td>{{ c.status }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

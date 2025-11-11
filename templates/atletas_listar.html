@@ -1,0 +1,32 @@
+{%extends "base.html" %}
+
+{% block title %}Atletas{% endblock %}
+
+{% block content %}
+
+<h2>Lista de Atletas</h2>
+<a href="{{url_for('atletas.novo')}}" class="btn">+ Novo Atleta</a>
+<br><br>
+<table class="table">
+    <tr>
+        <th>ID</th>
+        <th>Nome</th>
+        <th>Data de Nascimento</th>
+        <th>Responsável</th>
+        <th>Telefone</th>
+        <th>Status</th>
+        <th>Posição</th>
+    </tr>
+    {% for a in atletas %}
+    <tr>
+        <td>{{ a.id }}</td>
+        <td>{{ a.nome }}</td>
+        <td>{{ a.data_nascimento.strftime('%d/%m/%Y') }}</td>
+        <td>{{ a.responsavel }}</td>
+        <td>{{ a.telefone }}</td>
+        <td>{{ a.posicao or '-' }}</td>
+        <td>{{ a.status }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

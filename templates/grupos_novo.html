@@ -1,0 +1,27 @@
+{%extends "base.html" %}
+
+{% block title %}Novo Grupo{% endblock %}
+
+{% block content %}
+
+<h2>Criar Novo Grupo</h2>
+<form method="POST">
+    <div class = form-group>
+        <label>Nome do Grupo</label>
+        <input name="nome" required>
+    </div>
+    <div class = form-group>
+        <label>Faixa Etária Mínima (opcional)</label>
+        <input type="number" name="faixa_min">
+    </div>
+    <div class = form-group>
+        <label>Faixa Etária Máxima (opcional)</label>
+        <input type="number" name="faixa_max">
+    </div>
+    <div class = form-group>
+        <label>Descrição</label>
+        <textarea name="descricao"></textarea>
+    </div>
+    <button type="submit" class="btn-primary">Salvar Grupo</button>
+</form>
+{% endblock %}
