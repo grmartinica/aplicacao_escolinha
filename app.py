@@ -1,20 +1,25 @@
 from flask import Flask
-from aplicacao_escolinha.config import Config
-from aplicacao_escolinha.extensions import db, login_manager
-from aplicacao_escolinha.routes.auth_routes import auth_bp
-from aplicacao_escolinha.routes.atletas_routes import atletas_bp
-from aplicacao_escolinha.routes.grupos_routes import grupos_bp
-from aplicacao_escolinha.routes.atividades_routes import atividades_bp
-from aplicacao_escolinha.routes.financeiro_routes import financeiro_bp
-from aplicacao_escolinha.routes.dashboard_routes import dashboard_bp
+from config import Config
+from extensions import db, login_manager
+from routes.auth_routes import auth_bp
+from routes.atletas_routes import atletas_bp
+from routes.grupos_routes import grupos_bp
+from routes.atividades_routes import atividades_bp
+from routes.financeiro_routes import financeiro_bp
+from routes.dashboard_routes import dashboard_bp
+import os
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
+    # Manter a pasta de upload 
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
     # Initialize extensions
     db.init_app(app)
     login_manager.init_app(app)
+    login_manager.login_view = 'auth.login'
 
     # Register blueprints
     app.register_blueprint(auth_bp, url_prefix='/auth')
