@@ -1,37 +1,35 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask_login import login_required
 from extensions import db
-from models import Atleta, AtletaFoto
-import base64, os
+from models import Atleta
+from datetime import datetime
 
 atletas_bp = Blueprint('atletas', __name__, url_prefix='/atletas')
 
-@atletas_bp.route('/')
+@atletas_bp.route('/listar')
+@login_required
 def listar():
-    atletas = Atleta.query.all()
-    return render_template('atletas/listar.html', atletas=atletas)
+    atletas = Atleta.query.order_by(Atleta.nome).all()
+    return render_template('atletas_listar.html', atletas=atletas)
 
-@atletas_bp.route('/novo', methods=['GET', 'POST'])
+@atletas_bp.route('/novo', methods=['GET','POST'])
+@login_required
 def novo():
     if request.method == 'POST':
         nome = request.form.get('nome')
-        data_nasc = request.form.get('data_nascimento')
-        posicao = request.form.get('posicao')
-        
-        atleta = Atleta(nome=nome, data_nascimento=data_nasc, posicao=posicao)
+        dn = request.form.get('data_nascimento')
+        posicao = request.form.get('posicao') or None
+        if not nome or not dn:
+            flash('Preencha nome e data de nascimento', 'danger')
+            return redirect(url_for('atletas.novo'))
+        atleta = Atleta(
+            nome=nome,
+            data_nascimento=datetime.strptime(dn, '%Y-%m-%d').date(),
+            posicao=posicao,
+            status='ATIVO'
+        )
         db.session.add(atleta)
         db.session.commit()
-
-        foto_base64 = request.form.get('foto_base64')
-        if foto_base64:
-            foto_data = base64.b64decode(foto_base64.split(',')[1])
-            path = os.path.join(current_app.config['UPLOAD_FOLDER'], f'atleta_{atleta.id}.jpg')
-            with open(path, 'wb') as f:
-                f.write(foto_data)
-            db.session.add(AtletaFoto(atleta_id=atleta.id, foto_path=path))
-            db.session.commit()
-
-        
-        flash('Atleta criado com sucesso!', 'success')
+        flash('Atleta cadastrado!', 'success')
         return redirect(url_for('atletas.listar'))
-    
     return render_template('atletas_novo.html')

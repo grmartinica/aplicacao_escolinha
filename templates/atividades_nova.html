@@ -1,44 +1,21 @@
 {% extends "base.html" %}
-
 {% block title %}Nova Atividade{% endblock %}
-
 {% block content %}
-
-<h2>Criar Nova Atividade</h2>
-<form method="POST">
-    <div class="form-group">
-        <label>Título da Atividade</label>
-        <input name="titulo" required>
-    </div>
-    <div class="form-group">
-        <label>Grupo (opcional)</label>
-        <select name="grupo_id">
-            <option value="">Selecione</option>
-            {% for g in grupos %}
-            <option value="{{ g.id }}">{{ g.nome }}</option>
-            {% endfor %}
-        </select>
-    </div>
-    <div class="form-group">
-        <label>Data</label>
-        <input type="date" name="data" required>
-    </div>
-    <div class="form-group">
-        <label>Horário Início</label>
-        <input type="time" name="hora_inicio" required>
-    </div>
-    <div class="form-group">
-        <label>Hora Fim (opcional)</label>
-        <input type="time" name="hora_fim">
-    </div>
-    <div class="form-group">
-        <label>Local</label>
-        <input name="local">
-    </div>
-    <div class="form-group">
-        <label>Descrição</label>
-        <textarea name="descricao"></textarea>
-    </div>
-    <button type="submit" class="btn-primary">Salvar Atividade</button>
+<h2>Nova atividade</h2>
+<form method="POST" class="form">
+  <label>Título <input name="titulo" required></label>
+  <label>Grupo
+    <select name="grupo_id" required>
+      <option value="">Selecione...</option>
+      {% for g in grupos %}
+        <option value="{{ g.id }}">{{ g.nome }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Data <input type="date" name="data" required></label>
+  <label>Hora início <input type="time" name="hora_inicio" required></label>
+  <label>Local <input name="local"></label>
+  <label>Descrição <input name="descricao"></label>
+  <button class="btn" type="submit">Salvar</button>
 </form>
 {% endblock %}
