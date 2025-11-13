@@ -1,30 +1,22 @@
-{%extends "base.html" %}
-
-{% block title %}Painel de Professor{% endblock %}
-
+{% extends "base.html" %}
+{% block title %}Atividades{% endblock %}
 {% block content %}
-
 <h2>Atividades</h2>
-<a href="{{ url_for('atividades.nova') }}" class="btn">+ Nova Atividade</a>
-<br><br>
+<a class="btn" href="{{ url_for('atividades.nova') }}">+ Nova atividade</a>
 <table class="table">
-    <tr>
-        <th>Título</th>
-        <th>Grupo</th>
-        <th>Data</th>
-        <th>Horário</th>
-        <th>Duração (min)</th>
-        <th>Local</th>
-    </tr>
+  <thead><tr><th>Título</th><th>Grupo</th><th>Data</th><th>Hora</th><th>Local</th></tr></thead>
+  <tbody>
     {% for a in atividades %}
     <tr>
-        <td>{{ a.titulo }}</td>
-        <td>{{ a.grupo.nome }}</td>
-        <td>{{ a.data.strftime('%d/%m/%Y') }}</td>
-        <td>{{ a.horario.strftime('%H:%M') }}</td>
-        <td>{{ a.duracao }}</td>
-        <td>{{ a.local }}</td>
+      <td>{{ a.titulo }}</td>
+      <td>{{ a.grupo.nome if a.grupo else '-' }}</td>
+      <td>{{ a.data }}</td>
+      <td>{{ a.hora_inicio }}</td>
+      <td>{{ a.local or '-' }}</td>
     </tr>
+    {% else %}
+    <tr><td colspan="5">Nenhuma atividade.</td></tr>
     {% endfor %}
+  </tbody>
 </table>
 {% endblock %}

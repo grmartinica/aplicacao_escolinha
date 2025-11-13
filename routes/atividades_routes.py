@@ -1,28 +1,46 @@
+<<<<<<< HEAD
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from extensions import db
 from models import Atividade, Grupo
+=======
+from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask_login import login_required, current_user
+from extensions import db
+from models import Atividade, Grupo
+from datetime import datetime
+>>>>>>> f57ce4cdbec38f48fbcbbdbdc779ca0235635612
 
-atividade_bp = Blueprint('atividades', __name__, url_prefix='/atividades')
+atividades_bp = Blueprint('atividades', __name__, url_prefix='/atividades')
 
-@atividade_bp.route('/')
+@atividades_bp.route('/listar')
+@login_required
 def listar():
-    atividades = Atividade.query.all()
+    atividades = Atividade.query.order_by(Atividade.data.desc(), Atividade.hora_inicio.desc()).all()
     return render_template('atividades_listar.html', atividades=atividades)
 
-@atividade_bp.route('/novo', methods=['GET', 'POST'])
+@atividades_bp.route('/nova', methods=['GET','POST'])
+@login_required
 def nova():
-    grupos = Grupo.query.all()
+    grupos = Grupo.query.order_by(Grupo.nome).all()
     if request.method == 'POST':
-        atividade = Atividade (
-            titulo=request.form['titulo'],
-            grupo_id=request.form['grupo_id'],
-            data=request.form['data'],
-            hora_inicio=request.form['hora_inicio'],
-            hora_fim=request.form['hora_fim'],
-            local=request.form['local']
+        titulo = request.form.get('titulo')
+        grupo_id = request.form.get('grupo_id', type=int)
+        data = request.form.get('data')
+        hora_inicio = request.form.get('hora_inicio')
+        if not all([titulo, grupo_id, data, hora_inicio]):
+            flash('Preencha título, grupo, data e hora inicial.', 'danger')
+            return redirect(url_for('atividades.nova'))
+        atividade = Atividade(
+            titulo=titulo,
+            grupo_id=grupo_id,
+            coach_id=current_user.id,
+            data=datetime.strptime(data, '%Y-%m-%d').date(),
+            hora_inicio=datetime.strptime(hora_inicio, '%H:%M').time(),
+            local=request.form.get('local') or None,
+            descricao=request.form.get('descricao') or None
         )
         db.session.add(atividade)
         db.session.commit()
-        flash('Atividade criada com sucesso!', 'success')
+        flash('Atividade criada!', 'success')
         return redirect(url_for('atividades.listar'))
     return render_template('atividades_nova.html', grupos=grupos)

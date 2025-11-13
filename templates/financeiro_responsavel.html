@@ -1,27 +1,21 @@
 {% extends "base.html" %}
-
-{% block title %}Financeiro Responsável{% endblock %}
-
+{% block title %}Financeiro | Responsável{% endblock %}
 {% block content %}
-
-<h2>Área Financeira do Responsável</h2>
-<p>Gerencie os pagamentos e as informações financeiras relacionadas ao seu filho aqui.</p>
+<h2>Minhas mensalidades</h2>
 <table class="table">
+  <thead><tr><th>Atleta</th><th>Descrição</th><th>Vencimento</th><th>Valor</th><th>Status</th></tr></thead>
+  <tbody>
+  {% for c in itens %}
     <tr>
-        <th>Atleta</th>
-        <th>Descrição</th>
-        <th>Vencimento</th>
-        <th>Valor</th>
-        <th>Status</th>
+      <td>{{ c.atleta.nome if c.atleta else '-' }}</td>
+      <td>{{ c.descricao }}</td>
+      <td>{{ c.vencimento }}</td>
+      <td>R$ {{ '%.2f'|format(c.valor) }}</td>
+      <td>{{ c.status }}</td>
     </tr>
-    {% for c in contas %}
-    <tr>
-        <td>{{ c.atleta.nome if c.atleta else '-'}}</td>
-        <td>{{ c.descricao }}</td>
-        <td>{{ c.vencimento.strftime('%d/%m/%Y') }}</td>
-        <td>R$ {{ '%.2f'|format(c.valor) }}</td>
-        <td>{{ c.status }}</td>
-    </tr>
-    {% endfor %}
+  {% else %}
+    <tr><td colspan="5">Sem mensalidades encontradas.</td></tr>
+  {% endfor %}
+  </tbody>
 </table>
 {% endblock %}
