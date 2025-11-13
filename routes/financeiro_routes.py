@@ -1,12 +1,9 @@
 from flask import Blueprint, render_template
-<<<<<<< HEAD
 from extensions import db
 from models import ContaReceber
-=======
 from flask_login import login_required, current_user
 from extensions import db
 from models import ContaReceber, AtletaResponsavel
->>>>>>> f57ce4cdbec38f48fbcbbdbdc779ca0235635612
 
 financeiro_bp = Blueprint('financeiro', __name__, url_prefix='/financeiro')
 

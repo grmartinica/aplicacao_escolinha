@@ -1,11 +1,8 @@
-<<<<<<< HEAD
 from flask import Blueprint, render_template
-=======
 from flask import Blueprint, render_template, redirect, url_for
 from flask_login import login_required, current_user
 from datetime import date
 from extensions import db
->>>>>>> f57ce4cdbec38f48fbcbbdbdc779ca0235635612
 from models import Atleta, ContaReceber
 
 dashboard_bp = Blueprint('dashboard', __name__)

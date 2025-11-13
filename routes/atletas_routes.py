@@ -1,15 +1,12 @@
-<<<<<<< HEAD
 from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
 from extensions import db
 from models import Atleta, AtletaFoto
 import base64, os
-=======
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required
 from extensions import db
 from models import Atleta
 from datetime import datetime
->>>>>>> f57ce4cdbec38f48fbcbbdbdc779ca0235635612
 
 atletas_bp = Blueprint('atletas', __name__, url_prefix='/atletas')
 
