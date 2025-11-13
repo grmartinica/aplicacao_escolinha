@@ -1,24 +1,18 @@
 import os
-from urllib.parse import quote_plus
 
 class Config:
-    SECRET_KEY = os.getenv("SECRET_KEY", "projetomartinica")
+    SECRET_KEY = os.getenv("SECRET_KEY", "alguma-coisa-bem-secreta")
 
-    DB_USER = os.getenv("DB_USER", "root")
-    DB_PASSWORD = os.getenv("DB_PASSWORD", "Phlgbabi@10")
-    DB_HOST = os.getenv("DB_HOST", "191.36.128.157")
-    DB_PORT = os.getenv("DB_PORT", "3306")
-    DB_NAME = os.getenv("DB_NAME", "escolinha")
-
-    # Escapando os caracteres especiais na senha do banco de dados
-    DB_PASSWORD_ENC = quote_plus(DB_PASSWORD)
+    DB_USER = os.getenv("mysqluser", "root")
+    DB_PASSWORD = os.getenv("mysqlpassword")
+    DB_HOST = os.getenv("mysqlhost", "mysql.railway.internal")
+    DB_PORT = os.getenv("mysqlport", "3306")
+    DB_NAME = os.getenv("mysqldatabase", "railway")
 
     SQLALCHEMY_DATABASE_URI = (
-        f"mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD_ENC}"
-        f"@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+        f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
     )
-
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    BASE_DIR = os.path.abspath(os.path.abspath(__file__))
-    UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads', "atletas")
+    # UPLOAD_FOLDER tem que existir no app.py
+    UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), "static", "uploads", "atletas")

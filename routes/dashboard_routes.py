@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template
-from aplicacao_escolinha.models import Atleta, ContaReceber
+from models import Atleta, ContaReceber
 
 dashboard_bp = Blueprint('dashboard', __name__, url_prefix='/dashboard')
 
