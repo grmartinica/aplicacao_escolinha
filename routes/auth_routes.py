@@ -1,14 +1,9 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
-from extensions import db, login_manager
-from models import Usuario
-from flask_login import login_user, logout_user, login_required, current_user
-from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Blueprint, render_template, redirect, url_for, request, flash
 from flask_login import login_user, logout_user, login_required
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from extensions import db, login_manager
-from models import Usuario
+from models import Usuario, Responsavel
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -41,3 +36,80 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for('auth.login'))
+
+
+# =========================
+# CADASTRO DE RESPONSÁVEL VIA CPF
+# =========================
+
+@auth_bp.route('/cadastro_responsavel', methods=['GET', 'POST'])
+def cadastro_responsavel_cpf():
+    """
+    Passo 1: responsável informa o CPF.
+    Se existir um registro de Responsavel com esse CPF e SEM usuario_id,
+    redirecionamos para criar usuário (e-mail + senha).
+    """
+    if request.method == 'POST':
+        cpf = (request.form.get('cpf') or '').strip()
+
+        resp = Responsavel.query.filter_by(cpf=cpf).first()
+        if not resp:
+            flash('CPF não localizado. Por favor, entre em contato com a coordenação.', 'danger')
+            return render_template('cadastro_responsavel_cpf.html')
+
+        if resp.usuario_id:
+            flash('Este responsável já possui acesso ao sistema. Utilize a tela de login.', 'warning')
+            return redirect(url_for('auth.login'))
+
+        return redirect(url_for('auth.cadastro_responsavel_criar_usuario', responsavel_id=resp.id))
+
+    return render_template('cadastro_responsavel_cpf.html')
+
+
+@auth_bp.route('/cadastro_responsavel/<int:responsavel_id>', methods=['GET', 'POST'])
+def cadastro_responsavel_criar_usuario(responsavel_id):
+    """
+    Passo 2: cria o usuário (PARENT) associado ao Responsavel informado.
+    """
+    resp = Responsavel.query.get_or_404(responsavel_id)
+
+    if resp.usuario_id:
+        flash('Este responsável já possui usuário criado. Faça login.', 'warning')
+        return redirect(url_for('auth.login'))
+
+    if request.method == 'POST':
+        nome = (request.form.get('nome') or '').strip() or resp.nome
+        email = (request.form.get('email') or '').strip()
+        senha = (request.form.get('senha') or '').strip()
+        confirmar = (request.form.get('confirmar_senha') or '').strip()
+
+        if not email or not senha:
+            flash('Informe e-mail e senha.', 'danger')
+            return render_template('cadastro_responsavel_usuario.html', responsavel=resp)
+
+        if senha != confirmar:
+            flash('As senhas não conferem.', 'danger')
+            return render_template('cadastro_responsavel_usuario.html', responsavel=resp)
+
+        if Usuario.query.filter_by(email=email).first():
+            flash('Já existe um usuário com este e-mail.', 'danger')
+            return render_template('cadastro_responsavel_usuario.html', responsavel=resp)
+
+        user = Usuario(
+            nome=nome,
+            email=email,
+            senha_hash=generate_password_hash(senha),
+            telefone=resp.telefone,
+            role='PARENT',
+            ativo=True
+        )
+        db.session.add(user)
+        db.session.flush()  # pega id sem commit
+
+        resp.usuario_id = user.id
+        db.session.commit()
+
+        flash('Cadastro realizado com sucesso! Faça login.', 'success')
+        return redirect(url_for('auth.login'))
+
+    return render_template('cadastro_responsavel_usuario.html', responsavel=resp)

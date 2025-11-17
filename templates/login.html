@@ -1,16 +1,35 @@
 {% extends "base.html" %}
-{% block title %}Login | Escolinha{% endblock %}
+
+{% block title %}Login - Escolinha{% endblock %}
+
 {% block content %}
-<div class="card login-card">
-  <h2>Entrar</h2>
-  <form method="POST" action="{{ url_for('auth.login') }}" class="form">
-    <label>E-mail
-      <input type="email" name="email" placeholder="seu@email.com" required />
-    </label>
-    <label>Senha
-      <input type="password" name="senha" placeholder="********" required />
-    </label>
-    <button type="submit" class="btn">Acessar</button>
-  </form>
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <h1 class="auth-title">Bem-vindo à Escolinha</h1>
+        <p class="auth-subtitle">
+            Sistema de gestão de atletas, grupos, agenda, mensalidades e fluxo de caixa.
+        </p>
+
+        <form method="POST" action="{{ url_for('auth.login') }}" class="auth-form">
+            <div class="form-group">
+                <label for="email">E-mail</label>
+                <input type="email" name="email" id="email" required placeholder="seuemail@exemplo.com">
+            </div>
+
+            <div class="form-group">
+                <label for="senha">Senha</label>
+                <input type="password" name="senha" id="senha" required placeholder="Digite sua senha">
+            </div>
+
+            <button type="submit" class="btn-primary btn-full">Entrar</button>
+        </form>
+
+        <div class="auth-links">
+            <p class="small">
+                Sou responsável e ainda não tenho acesso:
+                <a href="{{ url_for('auth.cadastro_responsavel_cpf') }}">Criar acesso com meu CPF</a>
+            </p>
+        </div>
+    </div>
 </div>
 {% endblock %}

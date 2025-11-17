@@ -22,10 +22,24 @@ class Usuario(db.Model, UserMixin):
 
 
 class Responsavel(db.Model):
+    """
+    Responsável pelo atleta: dados cadastrais e link com usuário (login).
+    O cadastro do USUÁRIO PARENT será criado depois com base neste CPF.
+    """
     __tablename__ = 'responsaveis'
 
     id = db.Column(db.Integer, primary_key=True)
-    usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'))  # pode ser null até criar usuário
+    nome = db.Column(db.String(150), nullable=False)
+    cpf = db.Column(db.String(14), nullable=False, unique=True)  # 000.000.000-00
+    telefone = db.Column(db.String(30))
+    cep = db.Column(db.String(9))  # 00000-000
+    logradouro = db.Column(db.String(150))
+    numero = db.Column(db.String(20))
+    complemento = db.Column(db.String(100))
+    bairro = db.Column(db.String(100))
+    cidade = db.Column(db.String(100))
+    estado = db.Column(db.String(2))
     observacoes = db.Column(db.String(255))
 
     atletas = db.relationship("AtletaResponsavel", back_populates="responsavel")
@@ -41,9 +55,13 @@ class Atleta(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(150), nullable=False)
     data_nascimento = db.Column(db.Date, nullable=False)
-    posicao = db.Column(db.String(50))
-    documento = db.Column(db.String(50))
-    telefone_residencial = db.Column(db.String(30))
+
+    telefone = db.Column(db.String(30))
+    rg = db.Column(db.String(20))
+    cpf = db.Column(db.String(14))
+    validade_atestado = db.Column(db.Date)
+    informacoes_adicionais = db.Column(db.Text)
+
     status = db.Column(db.Enum('ATIVO', 'INATIVO'), default='ATIVO')
     criado_em = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -105,11 +123,28 @@ class AtletaGrupo(db.Model):
 
 
 class Plano(db.Model):
+    """
+    Plano de mensalidade:
+    - nome
+    - valor
+    - dia vencimento
+    - forma pagamento padrão
+    - periodicidade (mensal, trimestral, semestral, anual)
+    """
     __tablename__ = 'planos'
 
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
     valor_mensal = db.Column(db.Numeric(10, 2), nullable=False)
+    dia_vencimento = db.Column(db.Integer, nullable=False, default=5)
+    forma_pagamento_padrao = db.Column(
+        db.Enum('PIX', 'DINHEIRO', 'CREDITO', 'DEBITO'),
+        default='PIX'
+    )
+    periodicidade = db.Column(
+        db.Enum('MENSAL', 'TRIMESTRAL', 'SEMESTRAL', 'ANUAL'),
+        default='MENSAL'
+    )
     descricao = db.Column(db.String(255))
     ativo = db.Column(db.Boolean, default=True)
 
@@ -177,7 +212,7 @@ class ContaReceber(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     atleta_id = db.Column(db.Integer, db.ForeignKey('atletas.id'))
     descricao = db.Column(db.String(255))
-    competencia = db.Column(db.Date)  # usar dia 01 representando o mês/ano
+    competencia = db.Column(db.Date)  # dia 01 representando o mês/ano
     vencimento = db.Column(db.Date, nullable=False)
     valor = db.Column(db.Numeric(10, 2), nullable=False)
     status = db.Column(

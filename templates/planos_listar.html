@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Planos{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Planos</h1>
+    <p>Gerencie os planos de mensalidade da escolinha.</p>
+    <a href="{{ url_for('planos.novo') }}" class="btn-primary">Novo plano</a>
+</div>
+
+<div class="card">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Valor</th>
+                <th>Vencimento</th>
+                <th>Forma padrão</th>
+                <th>Periodicidade</th>
+                <th>Ativo</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for plano in planos %}
+                <tr>
+                    <td>{{ plano.nome }}</td>
+                    <td>R$ {{ '{:,.2f}'.format(plano.valor_mensal) }}</td>
+                    <td>{{ plano.dia_vencimento }}</td>
+                    <td>{{ plano.forma_pagamento_padrao }}</td>
+                    <td>{{ plano.periodicidade }}</td>
+                    <td>{{ 'Sim' if plano.ativo else 'Não' }}</td>
+                    <td>
+                        <a href="{{ url_for('planos.editar', plano_id=plano.id) }}" class="btn-link">Editar</a>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="7">Nenhum plano cadastrado.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

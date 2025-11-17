@@ -7,7 +7,9 @@ from routes.grupos_routes import grupos_bp
 from routes.atividades_routes import atividades_bp
 from routes.financeiro_routes import financeiro_bp
 from routes.dashboard_routes import dashboard_bp
+from routes.planos_routes import planos_bp  # NOVO
 import os
+
 
 def create_app():
     app = Flask(__name__)
@@ -17,31 +19,27 @@ def create_app():
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
     # Extensões
-
-    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-
     db.init_app(app)
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
 
+    # Blueprints
     app.register_blueprint(auth_bp)
     app.register_blueprint(atletas_bp)
     app.register_blueprint(grupos_bp)
     app.register_blueprint(atividades_bp)
     app.register_blueprint(financeiro_bp)
     app.register_blueprint(dashboard_bp)
+    app.register_blueprint(planos_bp)
 
-    
+    # Criação de tabelas (para ambiente simples, sem migrações)
     with app.app_context():
         db.create_all()
 
     return app
 
+
 app = create_app()
 
 if __name__ == "__main__":
-    app.run(debug=True)
-
-if __name__ == "__main__":
-    app = create_app()
     app.run(debug=True)

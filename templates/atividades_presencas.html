@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Presenças - {{ atividade.titulo }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Presenças</h1>
+    <p>
+        Atividade: <strong>{{ atividade.titulo }}</strong> ·
+        Grupo: <strong>{{ atividade.grupo.nome if atividade.grupo else '-' }}</strong> ·
+        Data: <strong>{{ atividade.data.strftime('%d/%m/%Y') }}</strong>
+    </p>
+</div>
+
+<div class="card">
+    <form method="POST">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Atleta</th>
+                    <th>Status</th>
+                    <th>Observação</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for atleta in atletas %}
+                    {% set p = presencas.get(atleta.id) %}
+                    <tr>
+                        <td>{{ atleta.nome }}</td>
+                        <td>
+                            <div class="radio-group">
+                                <label>
+                                    <input type="radio" name="status_{{ atleta.id }}" value="PRESENTE"
+                                           {% if p and p.status == 'PRESENTE' %}checked{% endif %}>
+                                    Presente
+                                </label>
+                                <label>
+                                    <input type="radio" name="status_{{ atleta.id }}" value="AUSENTE"
+                                           {% if p and p.status == 'AUSENTE' %}checked{% endif %}>
+                                    Ausente
+                                </label>
+                                <label>
+                                    <input type="radio" name="status_{{ atleta.id }}" value="JUSTIFICADO"
+                                           {% if p and p.status == 'JUSTIFICADO' %}checked{% endif %}>
+                                    Justificado
+                                </label>
+                            </div>
+                        </td>
+                        <td>
+                            <input type="text" name="observacao_{{ atleta.id }}"
+                                   value="{{ p.observacao if p else '' }}">
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="form-actions">
+            <a href="{{ url_for('atividades.listar') }}" class="btn-secondary">Voltar</a>
+            <button type="submit" class="btn-primary">Salvar presenças</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

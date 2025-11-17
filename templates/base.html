@@ -1,42 +1,63 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <title>{% block title %}Escolinha{% endblock %}</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="UTF-8">
+    <title>{% block title %}Escolinha - Aurora Tech{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- CSS principal -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
 </head>
 <body>
-<header class="topbar">
-  <div class="brand">⚽ Escolinha</div>
-  <nav>
-    {% if current_user.is_authenticated %}
-      <a href="{{ url_for('dashboard.index') }}">Dashboard</a>
-      <a href="{{ url_for('atletas.listar') }}">Atletas</a>
-      <a href="{{ url_for('atividades.listar') }}">Atividades</a>
-      {% if current_user.role == 'ADMIN' %}
-        <a href="{{ url_for('financeiro.resumo') }}">Financeiro</a>
-      {% else %}
-        <a href="{{ url_for('financeiro.resumo_responsavel') }}">Financeiro</a>
-      {% endif %}
-      <a href="{{ url_for('auth.logout') }}">Sair</a>
-    {% else %}
-      <a href="{{ url_for('auth.login') }}">Entrar</a>
-    {% endif %}
-  </nav>
-</header>
+    <header class="topbar">
+        <div class="topbar-left">
+            <div class="brand">
+                <span class="brand-logo">⚽</span>
+                <div class="brand-text">
+                    <span class="brand-title">Escolinha</span>
+                    <span class="brand-subtitle">Aurora Tech</span>
+                </div>
+            </div>
+        </div>
+        <div class="topbar-right">
+            {% if current_user.is_authenticated %}
+                <nav class="nav-menu">
+                    <a href="{{ url_for('dashboard.index') }}">Dashboard</a>
+                    <a href="{{ url_for('atletas.listar') }}">Atletas</a>
+                    <a href="{{ url_for('grupos.listar') }}">Grupos</a>
+                    <a href="{{ url_for('atividades.listar') }}">Agenda</a>
+                    <a href="{{ url_for('planos.listar') }}">Planos</a>
+                    <a href="{{ url_for('financeiro.resumo') }}">Financeiro</a>
+                </nav>
+                <div class="user-info">
+                    <span class="user-role">{{ current_user.role }}</span>
+                    <span class="user-name">{{ current_user.nome }}</span>
+                    <a class="btn-logout" href="{{ url_for('auth.logout') }}">Sair</a>
+                </div>
+            {% else %}
+                <a class="btn-primary" href="{{ url_for('auth.login') }}">Entrar</a>
+            {% endif %}
+        </div>
+    </header>
 
-<main class="container">
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      <div class="flash-stack">
-        {% for category, message in messages %}
-          <div class="alert {{ category }}">{{ message }}</div>
-        {% endfor %}
-      </div>
-    {% endif %}
-  {% endwith %}
-  {% block content %}{% endblock %}
-</main>
+    <main class="page-container">
+        {% with messages = get_flashed_messages(with_categories=True) %}
+            {% if messages %}
+                <div class="flash-container">
+                    {% for category, message in messages %}
+                        <div class="flash flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <span>© {{ current_year or 2025 }} Aurora Tech · Sistema de Gestão de Escolinha de Futebol</span>
+    </footer>
 </body>
 </html>
