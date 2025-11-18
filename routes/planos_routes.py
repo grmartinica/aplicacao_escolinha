@@ -9,7 +9,7 @@ planos_bp = Blueprint('planos', __name__, url_prefix='/planos')
 @planos_bp.route('/')
 @login_required
 def listar():
-    planos = Plano.query.order_by(Plano.nome).all()
+    planos = Plano.query.order_by(Plano.ativo.desc(), Plano.nome).all()
     return render_template('planos_listar.html', planos=planos)
 
 
@@ -17,28 +17,23 @@ def listar():
 @login_required
 def novo():
     if request.method == 'POST':
-        nome = request.form.get('nome')
-        valor = request.form.get('valor', type=float)
-        dia_venc = request.form.get('dia_vencimento', type=int)
-        forma = request.form.get('forma_pagamento_padrao')
-        periodicidade = request.form.get('periodicidade')
-        descricao = request.form.get('descricao')
+        nome = (request.form.get('nome') or '').strip()
+        valor = request.form.get('valor_mensal', type=float)
+        descricao = (request.form.get('descricao') or '').strip()
 
-        if not nome or not valor or not dia_venc:
-            flash('Preencha nome, valor e dia de vencimento.', 'danger')
+        if not nome or valor is None:
+            flash('Informe ao menos nome e valor mensal do plano.', 'danger')
             return redirect(url_for('planos.novo'))
 
         plano = Plano(
             nome=nome,
             valor_mensal=valor,
-            dia_vencimento=dia_venc,
-            forma_pagamento_padrao=forma or 'PIX',
-            periodicidade=periodicidade or 'MENSAL',
-            descricao=descricao or None
+            descricao=descricao or None,
+            ativo=True
         )
         db.session.add(plano)
         db.session.commit()
-        flash('Plano cadastrado com sucesso!', 'success')
+        flash('Plano criado com sucesso!', 'success')
         return redirect(url_for('planos.listar'))
 
     return render_template('planos_novo.html')
@@ -50,13 +45,19 @@ def editar(plano_id):
     plano = Plano.query.get_or_404(plano_id)
 
     if request.method == 'POST':
-        plano.nome = request.form.get('nome')
-        plano.valor_mensal = request.form.get('valor', type=float)
-        plano.dia_vencimento = request.form.get('dia_vencimento', type=int)
-        plano.forma_pagamento_padrao = request.form.get('forma_pagamento_padrao') or 'PIX'
-        plano.periodicidade = request.form.get('periodicidade') or 'MENSAL'
-        plano.descricao = request.form.get('descricao') or None
-        plano.ativo = bool(request.form.get('ativo'))
+        nome = (request.form.get('nome') or '').strip()
+        valor = request.form.get('valor_mensal', type=float)
+        descricao = (request.form.get('descricao') or '').strip()
+        ativo = True if request.form.get('ativo') == 'on' else False
+
+        if not nome or valor is None:
+            flash('Informe ao menos nome e valor mensal do plano.', 'danger')
+            return redirect(url_for('planos.editar', plano_id=plano.id))
+
+        plano.nome = nome
+        plano.valor_mensal = valor
+        plano.descricao = descricao or None
+        plano.ativo = ativo
 
         db.session.commit()
         flash('Plano atualizado com sucesso!', 'success')
