@@ -1,157 +1,70 @@
 {% extends "base.html" %}
-
-{% block title %}Novo Atleta{% endblock %}
+{% if atleta %}
+    {% set page_title = "Editar atleta" %}
+{% else %}
+    {% set page_title = "Novo atleta" %}
+{% endif %}
+{% block title %}{{ page_title }}{% endblock %}
 
 {% block content %}
 <div class="page-header">
-    <h1>Novo Atleta</h1>
-    <p>Cadastro completo do atleta, responsável, plano e grupos.</p>
+    <div>
+        <h1 class="page-title">{{ page_title }}</h1>
+        <p class="page-subtitle">Cadastre ou atualize os dados do atleta.</p>
+    </div>
+    <a href="{{ url_for('atletas.listar') }}" class="btn btn-outline">Voltar</a>
 </div>
 
 <div class="card">
-    <form method="POST" enctype="multipart/form-data" class="form-grid">
-
-        <!-- COLUNA 1: Dados do atleta -->
-        <section class="form-section">
-            <h2>Dados do atleta</h2>
-
-            <div class="form-group">
-                <label for="foto">Foto do atleta</label>
-                <input type="file" name="foto" id="foto" accept="image/*">
-                <p class="small">Você pode escolher uma foto do dispositivo ou tirar pela câmera (no celular).</p>
-            </div>
-
+    <div class="card-body">
+        <form method="post" class="form-grid">
             <div class="form-group">
                 <label for="nome">Nome completo *</label>
-                <input type="text" name="nome" id="nome" required>
+                <input type="text" id="nome" name="nome" class="form-control"
+                       value="{{ atleta.nome if atleta }}" required>
             </div>
 
             <div class="form-group">
                 <label for="data_nascimento">Data de nascimento *</label>
-                <input type="date" name="data_nascimento" id="data_nascimento" required>
+                <input type="date" id="data_nascimento" name="data_nascimento" class="form-control"
+                       value="{{ atleta.data_nascimento if atleta }}" required>
             </div>
 
             <div class="form-group">
-                <label for="telefone">Telefone</label>
-                <input type="text" name="telefone" id="telefone">
+                <label for="posicao">Posição</label>
+                <input type="text" id="posicao" name="posicao" class="form-control"
+                       placeholder="Goleiro, zagueiro, meia..."
+                       value="{{ atleta.posicao if atleta }}">
             </div>
 
             <div class="form-group">
-                <label for="rg">RG</label>
-                <input type="text" name="rg" id="rg">
+                <label for="documento">Documento (RG/CPF)</label>
+                <input type="text" id="documento" name="documento" class="form-control"
+                       value="{{ atleta.documento if atleta }}">
             </div>
 
             <div class="form-group">
-                <label for="cpf">CPF</label>
-                <input type="text" name="cpf" id="cpf">
+                <label for="telefone">Telefone do responsável</label>
+                <input type="text" id="telefone" name="telefone" class="form-control"
+                       value="{{ atleta.telefone_residencial if atleta }}">
             </div>
 
+            {% if atleta %}
             <div class="form-group">
-                <label for="validade_atestado">Validade do atestado médico</label>
-                <input type="date" name="validade_atestado" id="validade_atestado">
-            </div>
-
-            <div class="form-group">
-                <label for="informacoes_adicionais">Informações adicionais</label>
-                <textarea name="informacoes_adicionais" id="informacoes_adicionais" rows="3"></textarea>
-            </div>
-        </section>
-
-        <!-- COLUNA 2: Responsável -->
-        <section class="form-section">
-            <h2>Responsável</h2>
-
-            <div class="form-group">
-                <label for="nome_responsavel">Nome do responsável</label>
-                <input type="text" name="nome_responsavel" id="nome_responsavel">
-            </div>
-
-            <div class="form-group">
-                <label for="cpf_responsavel">CPF do responsável</label>
-                <input type="text" name="cpf_responsavel" id="cpf_responsavel">
-            </div>
-
-            <div class="form-group">
-                <label for="telefone_responsavel">Telefone do responsável</label>
-                <input type="text" name="telefone_responsavel" id="telefone_responsavel">
-            </div>
-
-            <div class="form-group">
-                <label for="parentesco">Parentesco</label>
-                <input type="text" name="parentesco" id="parentesco" placeholder="Pai, mãe, tio...">
-            </div>
-
-            <h3>Endereço</h3>
-
-            <div class="form-group">
-                <label for="cep">CEP</label>
-                <input type="text" name="cep" id="cep" placeholder="00000-000">
-            </div>
-
-            <div class="form-group">
-                <label for="logradouro">Rua / Avenida</label>
-                <input type="text" name="logradouro" id="logradouro">
-            </div>
-
-            <div class="form-group">
-                <label for="numero">Número</label>
-                <input type="text" name="numero" id="numero">
-            </div>
-
-            <div class="form-group">
-                <label for="complemento">Complemento</label>
-                <input type="text" name="complemento" id="complemento">
-            </div>
-
-            <div class="form-group">
-                <label for="bairro">Bairro</label>
-                <input type="text" name="bairro" id="bairro">
-            </div>
-
-            <div class="form-group">
-                <label for="cidade">Cidade</label>
-                <input type="text" name="cidade" id="cidade">
-            </div>
-
-            <div class="form-group">
-                <label for="estado">Estado (UF)</label>
-                <input type="text" name="estado" id="estado" maxlength="2">
-            </div>
-        </section>
-
-        <!-- COLUNA 3: Plano e grupos -->
-        <section class="form-section">
-            <h2>Plano e grupos</h2>
-
-            <div class="form-group">
-                <label for="plano_id">Plano contratado</label>
-                <select name="plano_id" id="plano_id">
-                    <option value="">Selecione um plano</option>
-                    {% for plano in planos %}
-                        <option value="{{ plano.id }}">
-                            {{ plano.nome }} - R$ {{ '{:,.2f}'.format(plano.valor_mensal) }}
-                        </option>
-                    {% endfor %}
+                <label for="status">Status</label>
+                <select id="status" name="status" class="form-control">
+                    <option value="ATIVO" {% if atleta.status == 'ATIVO' %}selected{% endif %}>Ativo</option>
+                    <option value="INATIVO" {% if atleta.status == 'INATIVO' %}selected{% endif %}>Inativo</option>
                 </select>
             </div>
-
-            <div class="form-group">
-                <label>Grupos do atleta</label>
-                <div class="checkbox-list">
-                    {% for grupo in grupos %}
-                        <label class="checkbox-item">
-                            <input type="checkbox" name="grupos_ids" value="{{ grupo.id }}">
-                            <span>{{ grupo.nome }}</span>
-                        </label>
-                    {% endfor %}
-                </div>
-            </div>
+            {% endif %}
 
             <div class="form-actions">
-                <a href="{{ url_for('atletas.listar') }}" class="btn-secondary">Cancelar</a>
-                <button type="submit" class="btn-primary">Salvar atleta</button>
+                <button type="submit" class="btn btn-primary">
+                    {% if atleta %}Salvar alterações{% else %}Cadastrar atleta{% endif %}
+                </button>
             </div>
-        </section>
-    </form>
+        </form>
+    </div>
 </div>
 {% endblock %}

@@ -1,4 +1,3 @@
-# routes/planos_routes.py
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required
 from extensions import db

@@ -1,28 +1,37 @@
 {% extends "base.html" %}
-
-{% block title %}Dashboard Administrativo{% endblock %}
+{% block title %}Dashboard · Admin{% endblock %}
 
 {% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Bem-vindo ao Painel Administrativo</h1>
+        <p class="page-subtitle">Gerencie as operações da escolinha a partir deste painel.</p>
+    </div>
+</div>
 
-<h2>Bem-vindo ao Painel Administrativo</h2>
-<p>Gerencie as operações da escolinha a partir deste painel.</p>
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">Atletas Ativos</div>
+        <div class="stat-value">{{ total_atletas }}</div>
+        <div class="stat-pill">Jogadores com status ATIVO</div>
+    </div>
 
-<div class="kpi-grid">
-    <div class="kpi-card">
-        <div class="kpi-label">Atletas Ativos</div>
-        <div class="kpi-value">{{ total_ativos }}</div>
+    <div class="stat-card">
+        <div class="stat-label">Atletas inadimplentes</div>
+        <div class="stat-value">{{ inadimplentes }}</div>
+        <div class="stat-pill">Com mensalidades pendentes/atrasadas</div>
     </div>
-    <div class="kpi-card">
-        <div class="kpi-label">Atletas Inadimplentes</div>
-        <div class="kpi-value">{{ inadimplentes }}</div>
+
+    <div class="stat-card">
+        <div class="stat-label">Saldo a receber</div>
+        <div class="stat-value">R$ {{ '%.2f'|format(saldo) }}</div>
+        <div class="stat-pill">Total de mensalidades abertas</div>
     </div>
-    <div class="kpi-card">
-        <div class="kpi-label">Saldo a Receber</div>
-        <div class="kpi-value">R$ {{ '%.2f'|format(saldo) }}</div>
-    </div>
-    <div class="kpi-card">
-        <div class="kpi-label">Aniversariante do mês</div>
-        <div class="kpi-value">{{ aniversariantes }}</div>
+
+    <div class="stat-card">
+        <div class="stat-label">Aniversariantes do mês</div>
+        <div class="stat-value">{{ aniversariantes }}</div>
+        <div class="stat-pill">Atletas que fazem aniversário este mês</div>
     </div>
 </div>
 {% endblock %}

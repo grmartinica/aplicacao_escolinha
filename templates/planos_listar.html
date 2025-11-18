@@ -5,7 +5,7 @@
 <div class="page-header">
     <div>
         <h1 class="page-title">Planos</h1>
-        <p class="page-subtitle">Gerencie os planos oferecidos pela escolinha.</p>
+        <p class="page-subtitle">Gerencie os planos de mensalidade da escolinha.</p>
     </div>
     <a href="{{ url_for('planos.novo') }}" class="btn btn-primary">+ Novo plano</a>
 </div>
@@ -15,32 +15,32 @@
         {% if planos %}
         <table class="table table-striped">
             <thead>
-                <tr>
-                    <th>Nome</th>
-                    <th>Valor mensal</th>
-                    <th>Dia vencimento</th>
-                    <th>Forma pagto padrão</th>
-                    <th>Periodicidade</th>
-                    <th>Status</th>
-                </tr>
+            <tr>
+                <th>Nome</th>
+                <th>Valor mensal</th>
+                <th>Dia vencimento</th>
+                <th>Forma padrão</th>
+                <th>Periodicidade</th>
+                <th>Status</th>
+            </tr>
             </thead>
             <tbody>
-                {% for plano in planos %}
-                <tr>
-                    <td>{{ plano.nome }}</td>
-                    <td>R$ {{ '%.2f'|format(plano.valor_mensal) }}</td>
-                    <td>{{ plano.dia_vencimento }}</td>
-                    <td>{{ plano.forma_pagamento_padrao }}</td>
-                    <td>{{ plano.periodicidade_cobranca }}</td>
-                    <td>
-                        {% if plano.ativo %}
-                            <span class="badge badge-success">Ativo</span>
-                        {% else %}
-                            <span class="badge badge-muted">Inativo</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
+            {% for p in planos %}
+            <tr>
+                <td>{{ p.nome }}</td>
+                <td>R$ {{ '%.2f'|format(p.valor_mensal) }}</td>
+                <td>{{ p.dia_vencimento or '-' }}</td>
+                <td>{{ p.forma_pagamento_padrao }}</td>
+                <td>{{ p.periodicidade_cobranca }}</td>
+                <td>
+                    {% if p.ativo %}
+                        <span class="badge badge-success">Ativo</span>
+                    {% else %}
+                        <span class="badge badge-muted">Inativo</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
             </tbody>
         </table>
         {% else %}
