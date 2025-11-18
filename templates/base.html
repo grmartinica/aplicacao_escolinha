@@ -1,63 +1,107 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}Escolinha - Aurora Tech{% endblock %}</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Escolinha Aurora Tech{% endblock %}</title>
 
-    <!-- CSS principal -->
+    <!-- Bootstrap 5 -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    >
+
+    <!-- CSS custom -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
-    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    {% block extra_css %}{% endblock %}
 </head>
-<body>
-    <header class="topbar">
-        <div class="topbar-left">
-            <div class="brand">
-                <span class="brand-logo">⚽</span>
-                <div class="brand-text">
-                    <span class="brand-title">Escolinha</span>
-                    <span class="brand-subtitle">Aurora Tech</span>
-                </div>
-            </div>
-        </div>
-        <div class="topbar-right">
-            {% if current_user.is_authenticated %}
-                <nav class="nav-menu">
-                    <a href="{{ url_for('dashboard.index') }}">Dashboard</a>
-                    <a href="{{ url_for('atletas.listar') }}">Atletas</a>
-                    <a href="{{ url_for('grupos.listar') }}">Grupos</a>
-                    <a href="{{ url_for('atividades.listar') }}">Agenda</a>
-                    <a href="{{ url_for('planos.listar') }}">Planos</a>
-                    <a href="{{ url_for('financeiro.resumo') }}">Financeiro</a>
-                </nav>
-                <div class="user-info">
-                    <span class="user-role">{{ current_user.role }}</span>
-                    <span class="user-name">{{ current_user.nome }}</span>
-                    <a class="btn-logout" href="{{ url_for('auth.logout') }}">Sair</a>
-                </div>
-            {% else %}
-                <a class="btn-primary" href="{{ url_for('auth.login') }}">Entrar</a>
-            {% endif %}
-        </div>
-    </header>
+<body class="app-body">
+<nav class="navbar navbar-expand-lg navbar-dark app-navbar shadow-sm">
+    <div class="container-fluid">
+        <a class="navbar-brand d-flex align-items-center" href="{{ url_for('dashboard.index') }}">
+            <div class="brand-logo me-2">⚽</div>
+            <span class="fw-bold">Escolinha Aurora Tech</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#mainNavbar" aria-controls="mainNavbar"
+                aria-expanded="false" aria-label="Alternar navegação">
+            <span class="navbar-toggler-icon"></span>
+        </button>
 
-    <main class="page-container">
-        {% with messages = get_flashed_messages(with_categories=True) %}
-            {% if messages %}
-                <div class="flash-container">
-                    {% for category, message in messages %}
-                        <div class="flash flash-{{ category }}">{{ message }}</div>
-                    {% endfor %}
-                </div>
+        <div class="collapse navbar-collapse" id="mainNavbar">
+            {% if current_user.is_authenticated %}
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'dashboard.index' %}active{% endif %}"
+                       href="{{ url_for('dashboard.index') }}">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.blueprint == 'atletas' %}active{% endif %}"
+                       href="{{ url_for('atletas.listar') }}">Atletas</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.blueprint == 'grupos' %}active{% endif %}"
+                       href="{{ url_for('grupos.listar') }}">Grupos</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.blueprint == 'atividades' %}active{% endif %}"
+                       href="{{ url_for('atividades.listar') }}">Agenda</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.blueprint == 'financeiro' %}active{% endif %}"
+                       href="{{ url_for('financeiro.resumo') }}">Financeiro</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.blueprint == 'planos' %}active{% endif %}"
+                       href="{{ url_for('planos.listar') }}">Planos</a>
+                </li>
+            </ul>
+            <div class="d-flex align-items-center">
+                <span class="me-3 text-light small">
+                    {{ current_user.nome }} · {{ current_user.role }}
+                </span>
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-light btn-sm">
+                    Sair
+                </a>
+            </div>
             {% endif %}
+        </div>
+    </div>
+</nav>
+
+<main class="app-main">
+    <div class="container-fluid app-container">
+
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-wrapper">
+              {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show app-alert" role="alert">
+                  {{ message }}
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
         {% endwith %}
 
         {% block content %}{% endblock %}
-    </main>
+    </div>
+</main>
 
-    <footer class="footer">
-        <span>© {{ current_year or 2025 }} Aurora Tech · Sistema de Gestão de Escolinha de Futebol</span>
-    </footer>
+<footer class="app-footer text-center text-muted small">
+    Aurora Tech · Plataforma de Gestão de Escolinhas de Futebol · {{ current_year or 2025 }}
+</footer>
+
+<script
+  src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+  integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+  crossorigin="anonymous"
+></script>
+
+{% block extra_js %}{% endblock %}
 </body>
 </html>
