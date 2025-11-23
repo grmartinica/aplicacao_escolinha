@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request
 from flask_login import login_required, current_user
 from extensions import db
-from models import ContaReceber, AtletaResponsavel
+from models import ContaReceber, AtletaResponsavel, Atleta
 
 financeiro_bp = Blueprint('financeiro', __name__, url_prefix='/financeiro')
 
@@ -9,27 +9,36 @@ financeiro_bp = Blueprint('financeiro', __name__, url_prefix='/financeiro')
 @financeiro_bp.route('/resumo')
 @login_required
 def resumo():
-    """
-    Visão financeira do ADMIN.
-    Suporta ?status=pendentes para mostrar apenas PENDENTE/ATRASADO
-    """
-    status_filter = request.args.get('status')  # ex: "pendentes"
+    # Filtros
+    status = request.args.get('status', 'TODOS')  # TODOS, INADIMPLENTE, PAGO, PENDENTE, ATRASADO, CANCELADO
+    nome = (request.args.get('nome') or '').strip()
+    metodo = request.args.get('metodo', 'TODOS')  # TODOS, PIX, CREDITO, DEBITO, DINHEIRO, ISENTO
 
-    base_query = ContaReceber.query
+    query = ContaReceber.query.join(Atleta, isouter=True)
 
-    if status_filter == 'pendentes':
-        base_query = base_query.filter(ContaReceber.status.in_(("PENDENTE", "ATRASADO")))
+    if nome:
+        query = query.filter(Atleta.nome.ilike(f"%{nome}%"))
 
-    total_pendente = db.session.query(db.func.coalesce(db.func.sum(ContaReceber.valor), 0)) \
-        .filter(ContaReceber.status != 'PAGO').scalar() or 0
-    total_pago = db.session.query(db.func.coalesce(db.func.sum(ContaReceber.valor), 0)) \
-        .filter(ContaReceber.status == 'PAGO').scalar() or 0
+    if metodo != 'TODOS':
+        query = query.filter(ContaReceber.metodo_pagamento == metodo)
 
-    qtd_inad = ContaReceber.query.filter(
-        ContaReceber.status.in_(("PENDENTE", "ATRASADO"))
-    ).count()
+    if status == 'INADIMPLENTE':
+        query = query.filter(ContaReceber.status.in_(('PENDENTE', 'ATRASADO')))
+    elif status != 'TODOS':
+        query = query.filter(ContaReceber.status == status)
 
-    itens = base_query.order_by(ContaReceber.vencimento.desc()).limit(50).all()
+    # Totais baseados na query filtrada
+    total_pendente = db.session.query(db.func.sum(ContaReceber.valor)) \
+        .filter(ContaReceber.status != 'PAGO') \
+        .scalar() or 0
+
+    total_pago = db.session.query(db.func.sum(ContaReceber.valor)) \
+        .filter(ContaReceber.status == 'PAGO') \
+        .scalar() or 0
+
+    qtd_inad = query.filter(ContaReceber.status.in_(("PENDENTE", "ATRASADO"))).count()
+
+    itens = query.order_by(ContaReceber.vencimento.desc()).limit(100).all()
 
     return render_template(
         'financeiro_resumo.html',
@@ -37,14 +46,15 @@ def resumo():
         total_pago=float(total_pago),
         qtd_inad=qtd_inad,
         itens=itens,
-        status_filter=status_filter,
+        filtro_status=status,
+        filtro_nome=nome,
+        filtro_metodo=metodo
     )
 
 
 @financeiro_bp.route('/responsavel')
 @login_required
 def resumo_responsavel():
-    # PARENT: visão do(s) filho(s)
     if current_user.role != 'PARENT':
         return render_template('financeiro_responsavel.html', itens=[])
 

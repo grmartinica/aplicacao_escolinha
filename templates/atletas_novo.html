@@ -18,6 +18,7 @@
 <div class="card">
     <div class="card-body">
         <form method="post" class="form-grid">
+            <!-- DADOS BÁSICOS -->
             <div class="form-group">
                 <label for="nome">Nome completo *</label>
                 <input type="text" id="nome" name="nome" class="form-control"
@@ -38,15 +39,34 @@
             </div>
 
             <div class="form-group">
-                <label for="documento">Documento (RG/CPF)</label>
-                <input type="text" id="documento" name="documento" class="form-control"
-                       value="{{ atleta.documento if atleta }}">
-            </div>
-
-            <div class="form-group">
                 <label for="telefone">Telefone do responsável</label>
                 <input type="text" id="telefone" name="telefone" class="form-control"
                        value="{{ atleta.telefone_residencial if atleta }}">
+            </div>
+
+            <!-- CPF / RG TOGGLE -->
+            <div class="form-group">
+                <label>Documento</label>
+                <div class="radio-group-inline">
+                    {% set doc_val = atleta.documento if atleta else '' %}
+                    {% set default_doc_type = 'CPF' %}
+                    <label>
+                        <input type="radio" name="doc_type" value="CPF"
+                               {% if not atleta or default_doc_type == 'CPF' %}checked{% endif %}>
+                        CPF
+                    </label>
+                    <label>
+                        <input type="radio" name="doc_type" value="RG">
+                        RG
+                    </label>
+                </div>
+
+                <input type="text" id="cpf_input" name="cpf" class="form-control mt-1"
+                       placeholder="000.000.000-00"
+                       value="{{ atleta.documento if atleta else '' }}">
+
+                <input type="text" id="rg_input" name="rg" class="form-control mt-1"
+                       placeholder="RG do atleta" style="display:none;">
             </div>
 
             {% if atleta %}
@@ -59,6 +79,52 @@
             </div>
             {% endif %}
 
+            <!-- CHECKBOXES DE DOCUMENTOS -->
+            <div class="form-group form-group-full">
+                <label>Documentos entregues (teste)</label>
+                <div class="checkbox-row">
+                    <label class="checkbox-inline">
+                        <input type="checkbox" name="doc_rg">
+                        RG
+                    </label>
+                    <label class="checkbox-inline">
+                        <input type="checkbox" name="doc_cpf">
+                        CPF
+                    </label>
+                    <label class="checkbox-inline">
+                        <input type="checkbox" name="doc_comprovante_endereco">
+                        Comprovante de endereço
+                    </label>
+                    <label class="checkbox-inline">
+                        <input type="checkbox" name="doc_declaracao_escolar">
+                        Declaração escolar
+                    </label>
+                    <label class="checkbox-inline">
+                        <input type="checkbox" name="doc_atestado_medico">
+                        Atestado médico
+                    </label>
+                </div>
+            </div>
+
+            <!-- CÂMERA / FOTO -->
+            <div class="form-group form-group-full">
+                <label>Foto do atleta</label>
+                <div class="camera-wrapper">
+                    <video id="video" autoplay playsinline></video>
+                    <canvas id="canvas" style="display:none;"></canvas>
+                    <div class="camera-actions">
+                        <button type="button" id="capture" class="btn btn-outline">
+                            Tirar foto com a câmera
+                        </button>
+                    </div>
+                    <input type="hidden" id="foto_base64" name="foto_base64">
+                    <p class="camera-hint">
+                        Permita o acesso à câmera do dispositivo para capturar a foto do atleta
+                        (funciona em desktop e celular).
+                    </p>
+                </div>
+            </div>
+
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary">
                     {% if atleta %}Salvar alterações{% else %}Cadastrar atleta{% endif %}
@@ -67,4 +133,30 @@
         </form>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/camera.js') }}"></script>
+<script>
+    // Toggle CPF / RG inputs
+    document.addEventListener('DOMContentLoaded', function () {
+        const cpfInput = document.getElementById('cpf_input');
+        const rgInput = document.getElementById('rg_input');
+        const radios = document.querySelectorAll('input[name="doc_type"]');
+
+        function updateDocInputs() {
+            const selected = document.querySelector('input[name="doc_type"]:checked').value;
+            if (selected === 'CPF') {
+                cpfInput.style.display = 'block';
+                rgInput.style.display = 'none';
+            } else {
+                cpfInput.style.display = 'none';
+                rgInput.style.display = 'block';
+            }
+        }
+
+        radios.forEach(r => r.addEventListener('change', updateDocInputs));
+        updateDocInputs();
+    });
+</script>
 {% endblock %}

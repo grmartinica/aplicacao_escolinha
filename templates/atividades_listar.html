@@ -1,22 +1,67 @@
 {% extends "base.html" %}
-{% block title %}Atividades{% endblock %}
+{% block title %}Agenda{% endblock %}
+
 {% block content %}
-<h2>Atividades</h2>
-<a class="btn" href="{{ url_for('atividades.nova') }}">+ Nova atividade</a>
-<table class="table">
-  <thead><tr><th>Título</th><th>Grupo</th><th>Data</th><th>Hora</th><th>Local</th></tr></thead>
-  <tbody>
-    {% for a in atividades %}
-    <tr>
-      <td>{{ a.titulo }}</td>
-      <td>{{ a.grupo.nome if a.grupo else '-' }}</td>
-      <td>{{ a.data }}</td>
-      <td>{{ a.hora_inicio }}</td>
-      <td>{{ a.local or '-' }}</td>
-    </tr>
-    {% else %}
-    <tr><td colspan="5">Nenhuma atividade.</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Agenda</h1>
+        <p class="page-subtitle">Visualize os treinos e atividades no calendário mensal.</p>
+    </div>
+    <a class="btn btn-primary" href="{{ url_for('atividades.nova') }}">+ Nova atividade</a>
+</div>
+
+<div class="calendar-header">
+    <a class="btn btn-outline btn-sm"
+       href="{{ url_for('atividades.listar', ano=prev_ano, mes=prev_mes) }}">&laquo; Mês anterior</a>
+    <div class="calendar-title">
+        {{ mes }}/{{ ano }}
+    </div>
+    <a class="btn btn-outline btn-sm"
+       href="{{ url_for('atividades.listar', ano=next_ano, mes=next_mes) }}">Próximo mês &raquo;</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="calendar-grid">
+            <div class="calendar-weekday">Seg</div>
+            <div class="calendar-weekday">Ter</div>
+            <div class="calendar-weekday">Qua</div>
+            <div class="calendar-weekday">Qui</div>
+            <div class="calendar-weekday">Sex</div>
+            <div class="calendar-weekday">Sáb</div>
+            <div class="calendar-weekday">Dom</div>
+
+            {% set offset = (first_weekday - 0) %} {# 0 = segunda #}
+            {% if offset < 0 %}{% set offset = offset + 7 %}{% endif %}
+
+            {% for i in range(offset) %}
+                <div class="calendar-cell empty"></div>
+            {% endfor %}
+
+            {% for dia in range(1, num_days + 1) %}
+                {% set eventos = atividades_por_dia.get(dia, []) %}
+                <div class="calendar-cell">
+                    <div class="calendar-day-number">{{ dia }}</div>
+                    {% for ev in eventos %}
+                        <div class="calendar-event">
+                            <div class="calendar-event-time">
+                                {{ ev.hora_inicio.strftime('%H:%M') if ev.hora_inicio else '' }}
+                            </div>
+                            <div class="calendar-event-title">
+                                {{ ev.titulo }}
+                            </div>
+                            <div class="calendar-event-meta">
+                                {{ ev.grupo.nome if ev.grupo else '' }}
+                            </div>
+                            <a href="{{ url_for('atividades.presencas', atividade_id=ev.id) }}"
+                               class="calendar-event-link">
+                                Presenças
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
 {% endblock %}

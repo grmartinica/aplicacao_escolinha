@@ -2,7 +2,8 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from extensions import db
 from models import Atividade, Grupo, Presenca, AtletaGrupo
-from datetime import datetime
+from datetime import datetime, date
+import calendar
 
 atividades_bp = Blueprint('atividades', __name__, url_prefix='/atividades')
 
@@ -10,8 +11,48 @@ atividades_bp = Blueprint('atividades', __name__, url_prefix='/atividades')
 @atividades_bp.route('/listar')
 @login_required
 def listar():
-    atividades = Atividade.query.order_by(Atividade.data.desc(), Atividade.hora_inicio.desc()).all()
-    return render_template('atividades_listar.html', atividades=atividades)
+    hoje = date.today()
+    ano = request.args.get('ano', type=int) or hoje.year
+    mes = request.args.get('mes', type=int) or hoje.month
+
+    first_day = date(ano, mes, 1)
+    last_day = date(ano, mes, calendar.monthrange(ano, mes)[1])
+
+    atividades = Atividade.query \
+        .filter(Atividade.data >= first_day, Atividade.data <= last_day) \
+        .order_by(Atividade.data.asc(), Atividade.hora_inicio.asc()) \
+        .all()
+
+    atividades_por_dia = {}
+    for a in atividades:
+        dia = a.data.day
+        atividades_por_dia.setdefault(dia, []).append(a)
+
+    first_weekday, num_days = calendar.monthrange(ano, mes)  # first_weekday: 0 = segunda
+
+    # Cálculo do mês anterior / próximo
+    if mes == 1:
+        prev_mes, prev_ano = 12, ano - 1
+    else:
+        prev_mes, prev_ano = mes - 1, ano
+
+    if mes == 12:
+        next_mes, next_ano = 1, ano + 1
+    else:
+        next_mes, next_ano = mes + 1, ano
+
+    return render_template(
+        'atividades_listar.html',
+        ano=ano,
+        mes=mes,
+        num_days=num_days,
+        first_weekday=first_weekday,
+        atividades_por_dia=atividades_por_dia,
+        prev_mes=prev_mes,
+        prev_ano=prev_ano,
+        next_mes=next_mes,
+        next_ano=next_ano
+    )
 
 
 @atividades_bp.route('/nova', methods=['GET', 'POST'])
@@ -46,17 +87,15 @@ def nova():
 @login_required
 def presencas(atividade_id):
     atividade = Atividade.query.get_or_404(atividade_id)
-    # atletas do grupo dessa atividade
     atletas_ids = [ag.atleta_id for ag in AtletaGrupo.query.filter_by(grupo_id=atividade.grupo_id, ativo=True)]
-    from models import Atleta  # import local pra evitar ciclos
+    from models import Atleta
     atletas = Atleta.query.filter(Atleta.id.in_(atletas_ids)).order_by(Atleta.nome).all()
 
     if request.method == 'POST':
-        # Remove presenças antigas
         Presenca.query.filter_by(atividade_id=atividade.id).delete()
 
         for atleta in atletas:
-            status = request.form.get(f'status_{atleta.id}')  # PRESENTE / AUSENTE / JUSTIFICADO
+            status = request.form.get(f'status_{atleta.id}')
             obs = request.form.get(f'observacao_{atleta.id}')
             if not status:
                 continue
@@ -71,7 +110,6 @@ def presencas(atividade_id):
         flash('Presenças registradas com sucesso!', 'success')
         return redirect(url_for('atividades.listar'))
 
-    # carrega presenças existentes
     presencas_existentes = {p.atleta_id: p for p in Presenca.query.filter_by(atividade_id=atividade.id).all()}
 
     return render_template(

@@ -5,62 +5,94 @@
 <div class="page-header">
     <div>
         <h1 class="page-title">Financeiro</h1>
-        <p class="page-subtitle">
-            Resumo das mensalidades da escolinha e status de pagamento.
-        </p>
+        <p class="page-subtitle">Acompanhe recebimentos, inadimplência e fluxo de mensalidades.</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="get" class="filter-bar">
+            <div class="form-group inline">
+                <label for="nome">Nome do atleta</label>
+                <input type="text" id="nome" name="nome" value="{{ filtro_nome }}" class="form-control"
+                       placeholder="Buscar por nome">
+            </div>
+
+            <div class="form-group inline">
+                <label for="status">Status</label>
+                <select id="status" name="status" class="form-control">
+                    <option value="TODOS" {% if filtro_status == 'TODOS' %}selected{% endif %}>Todos</option>
+                    <option value="INADIMPLENTE" {% if filtro_status == 'INADIMPLENTE' %}selected{% endif %}>Apenas inadimplentes</option>
+                    <option value="PENDENTE" {% if filtro_status == 'PENDENTE' %}selected{% endif %}>Pendentes</option>
+                    <option value="ATRASADO" {% if filtro_status == 'ATRASADO' %}selected{% endif %}>Atrasados</option>
+                    <option value="PAGO" {% if filtro_status == 'PAGO' %}selected{% endif %}>Pagos</option>
+                    <option value="CANCELADO" {% if filtro_status == 'CANCELADO' %}selected{% endif %}>Cancelados</option>
+                </select>
+            </div>
+
+            <div class="form-group inline">
+                <label for="metodo">Forma de pagamento</label>
+                <select id="metodo" name="metodo" class="form-control">
+                    <option value="TODOS" {% if filtro_metodo == 'TODOS' %}selected{% endif %}>Todas</option>
+                    <option value="PIX" {% if filtro_metodo == 'PIX' %}selected{% endif %}>PIX</option>
+                    <option value="DINHEIRO" {% if filtro_metodo == 'DINHEIRO' %}selected{% endif %}>Dinheiro</option>
+                    <option value="CREDITO" {% if filtro_metodo == 'CREDITO' %}selected{% endif %}>Crédito</option>
+                    <option value="DEBITO" {% if filtro_metodo == 'DEBITO' %}selected{% endif %}>Débito</option>
+                    <option value="ISENTO" {% if filtro_metodo == 'ISENTO' %}selected{% endif %}>Isento</option>
+                </select>
+            </div>
+
+            <div class="form-group inline">
+                <label>&nbsp;</label>
+                <button type="submit" class="btn btn-primary">Filtrar</button>
+            </div>
+        </form>
     </div>
 </div>
 
 <div class="kpis">
-    <div class="kpi-card">
-        <div class="kpi-label">Total pago</div>
-        <div class="kpi-value">R$ {{ '%.2f'|format(total_pago) }}</div>
-    </div>
-    <div class="kpi-card">
-        <div class="kpi-label">Total pendente</div>
-        <div class="kpi-value">R$ {{ '%.2f'|format(total_pendente) }}</div>
-    </div>
-    <div class="kpi-card">
-        <div class="kpi-label">Inadimplências</div>
-        <div class="kpi-value">{{ qtd_inad }}</div>
-    </div>
+  <div class="kpi">
+      <div class="t">Total pago</div>
+      <div class="v">R$ {{ '%.2f'|format(total_pago) }}</div>
+  </div>
+  <div class="kpi">
+      <div class="t">Total pendente</div>
+      <div class="v">R$ {{ '%.2f'|format(total_pendente) }}</div>
+  </div>
+  <div class="kpi">
+      <div class="t">Inadimplências</div>
+      <div class="v">{{ qtd_inad }}</div>
+  </div>
 </div>
 
-<div class="card mt-2">
+<div class="card">
     <div class="card-body">
-        <div class="table-header-row">
-            <h2 class="card-title-sm">Mensalidades</h2>
-            {% if status_filter == 'pendentes' %}
-                <span class="badge badge-warning">Filtrando: pendentes/atrasadas</span>
-            {% endif %}
-        </div>
-
-        {% if itens %}
-        <table class="table table-striped">
-            <thead>
-            <tr>
-                <th>Atleta</th>
-                <th>Descrição</th>
-                <th>Vencimento</th>
-                <th>Valor</th>
-                <th>Status</th>
-            </tr>
-            </thead>
-            <tbody>
+        <table class="table">
+          <thead>
+          <tr>
+              <th>Atleta</th>
+              <th>Descrição</th>
+              <th>Vencimento</th>
+              <th>Valor</th>
+              <th>Status</th>
+              <th>Forma</th>
+          </tr>
+          </thead>
+          <tbody>
             {% for c in itens %}
-                <tr>
-                    <td>{{ c.atleta.nome if c.atleta else '-' }}</td>
-                    <td>{{ c.descricao }}</td>
-                    <td>{{ c.vencimento }}</td>
-                    <td>R$ {{ '%.2f'|format(c.valor) }}</td>
-                    <td>{{ c.status }}</td>
-                </tr>
+              <tr>
+                <td>{{ c.atleta.nome if c.atleta else '-' }}</td>
+                <td>{{ c.descricao }}</td>
+                <td>{{ c.vencimento }}</td>
+                <td>R$ {{ '%.2f'|format(c.valor) }}</td>
+                <td>{{ c.status }}</td>
+                <td>{{ c.metodo_pagamento }}</td>
+              </tr>
+            {% else %}
+              <tr><td colspan="6">Sem registros com os filtros atuais.</td></tr>
             {% endfor %}
-            </tbody>
+          </tbody>
         </table>
-        {% else %}
-            <p class="empty-state">Nenhuma mensalidade encontrada com o filtro atual.</p>
-        {% endif %}
     </div>
 </div>
 {% endblock %}

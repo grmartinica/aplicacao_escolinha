@@ -564,3 +564,156 @@ textarea:focus {
     padding: 0.6rem 0.8rem;
     font-size: 0.85rem;
 }
+
+/* ---------- FILTER BAR ---------- */
+.filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1rem;
+    align-items: flex-end;
+}
+
+.form-group.inline {
+    min-width: 180px;
+}
+
+/* ---------- CALENDÁRIO ---------- */
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.calendar-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.25rem;
+    font-size: 0.85rem;
+}
+
+.calendar-weekday {
+    text-align: center;
+    padding: 0.4rem 0;
+    font-weight: 600;
+    color: #c4c7dd;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.calendar-cell {
+    min-height: 90px;
+    border-radius: 12px;
+    padding: 0.35rem 0.4rem;
+    background: rgba(6, 10, 25, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.calendar-cell.empty {
+    background: transparent;
+    border: none;
+}
+
+.calendar-day-number {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #ffb347;
+}
+
+.calendar-event {
+    margin-top: 0.15rem;
+    padding: 0.25rem 0.3rem;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.calendar-event-time {
+    font-size: 0.7rem;
+    color: #cfd2e2;
+}
+
+.calendar-event-title {
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.calendar-event-meta {
+    font-size: 0.7rem;
+    color: #9ea2c0;
+}
+
+.calendar-event-link {
+    display: inline-block;
+    margin-top: 0.15rem;
+    font-size: 0.7rem;
+    text-decoration: none;
+    color: #ffb347;
+}
+
+/* ---------- CAMERA ---------- */
+.camera-wrapper {
+    border-radius: 14px;
+    border: 1px dashed rgba(255, 255, 255, 0.25);
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.camera-wrapper video {
+    width: 100%;
+    max-width: 360px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.camera-actions {
+    margin-top: 0.25rem;
+}
+
+.camera-hint {
+    font-size: 0.75rem;
+    color: #a3a7c0;
+}
+
+/* RADIO INLINE (CPF/RG) */
+.radio-group-inline {
+    display: inline-flex;
+    gap: 0.8rem;
+    font-size: 0.85rem;
+}
+
+/* KPIs FINANCEIRO */
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.8rem;
+  margin: 0.5rem 0 1rem;
+}
+
+.kpi {
+  background: linear-gradient(145deg, rgba(10, 14, 32, 0.96), rgba(24, 34, 66, 0.96));
+  border-radius: 14px;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.kpi .t {
+  font-size: 0.75rem;
+  color: #9ea2c0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.kpi .v {
+  margin-top: 0.2rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
