@@ -40,31 +40,29 @@ class Atleta(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(150), nullable=False)
-
-    # campos novos / alinhados com o banco
-    rg = db.Column(db.String(20))
-    cpf = db.Column(db.String(14))
-
     data_nascimento = db.Column(db.Date, nullable=False)
     posicao = db.Column(db.String(50))
 
-    # legado – vamos manter pra não quebrar nada que ainda use
-    documento = db.Column(db.String(50))
+    # novos campos mapeando o que já existe no banco
+    rg = db.Column(db.String(20))
+    cpf = db.Column(db.String(14))
     telefone_residencial = db.Column(db.String(30))
-
-    telefone = db.Column(db.String(30))  # telefone principal
-    status = db.Column(db.Enum('ATIVO', 'INATIVO'), default='ATIVO')
-
-    criado_em = db.Column(db.DateTime, default=datetime.utcnow)
-
+    telefone = db.Column(db.String(30))
     validade_atestado = db.Column(db.Date)
     informacoes_adicionais = db.Column(db.String(255))
+
+    # campo antigo "documento" mantido por compatibilidade, se ainda existir na tabela
+    documento = db.Column(db.String(50))
+
+    status = db.Column(db.Enum('ATIVO', 'INATIVO'), default='ATIVO')
+    criado_em = db.Column(db.DateTime, default=datetime.utcnow)
 
     fotos = db.relationship("AtletaFoto", backref="atleta", lazy=True)
     responsaveis = db.relationship("AtletaResponsavel", back_populates="atleta")
     grupos = db.relationship("AtletaGrupo", back_populates="atleta")
     planos = db.relationship("AtletaPlano", back_populates="atleta")
     financeiro = db.relationship("ContaReceber", backref="atleta", lazy=True)
+
 
 
 class AtletaFoto(db.Model):

@@ -18,7 +18,8 @@
 <div class="card">
     <div class="card-body">
         <form method="post" class="form-grid">
-            <!-- Dados básicos -->
+
+            <!-- Dados principais -->
             <div class="form-group">
                 <label for="nome">Nome completo *</label>
                 <input type="text" id="nome" name="nome" class="form-control"
@@ -38,7 +39,7 @@
                        value="{{ atleta.posicao if atleta }}">
             </div>
 
-            <!-- RG / CPF -->
+            <!-- Documentos -->
             <div class="form-group">
                 <label for="rg">RG</label>
                 <input type="text" id="rg" name="rg" class="form-control"
@@ -51,7 +52,6 @@
                        value="{{ atleta.cpf if atleta }}">
             </div>
 
-            <!-- Telefone / atestado -->
             <div class="form-group">
                 <label for="telefone">Telefone do responsável</label>
                 <input type="text" id="telefone" name="telefone" class="form-control"
@@ -68,66 +68,25 @@
             <div class="form-group">
                 <label for="plano_id">Plano</label>
                 <select id="plano_id" name="plano_id" class="form-control">
-                    <option value="">Selecione...</option>
+                    <option value="">Nenhum</option>
                     {% for p in planos %}
                         <option value="{{ p.id }}"
-                                {% if plano_atual_id == p.id %}selected{% endif %}>
-                            {{ p.nome }} – R$ {{ '%.2f'|format(p.valor_mensal) }}
+                        {% if plano_atual and plano_atual == p.id %}selected{% endif %}>
+                            {{ p.nome }} · R$ {{ '%.2f'|format(p.valor_mensal) }}
                         </option>
                     {% endfor %}
                 </select>
-            </div>
-
-            {% if atleta %}
-            <div class="form-group">
-                <label for="status">Status</label>
-                <select id="status" name="status" class="form-control">
-                    <option value="ATIVO" {% if atleta.status == 'ATIVO' %}selected{% endif %}>Ativo</option>
-                    <option value="INATIVO" {% if atleta.status == 'INATIVO' %}selected{% endif %}>Inativo</option>
-                </select>
-            </div>
-            {% endif %}
-
-            <!-- Documentos (checkbox) -->
-            <div class="form-group form-group-full">
-                <label>Documentos entregues</label>
-                <div class="chips-grid">
-                    <label class="chip-checkbox">
-                        <input type="checkbox" name="docs[]" value="rg">
-                        <span>RG</span>
-                    </label>
-                    <label class="chip-checkbox">
-                        <input type="checkbox" name="docs[]" value="cpf">
-                        <span>CPF</span>
-                    </label>
-                    <label class="chip-checkbox">
-                        <input type="checkbox" name="docs[]" value="comprovante_endereco">
-                        <span>Comprovante de endereço</span>
-                    </label>
-                    <label class="chip-checkbox">
-                        <input type="checkbox" name="docs[]" value="declaracao_escolar">
-                        <span>Declaração escolar</span>
-                    </label>
-                    <label class="chip-checkbox">
-                        <input type="checkbox" name="docs[]" value="atestado_medico">
-                        <span>Atestado médico</span>
-                    </label>
-                </div>
-                <small class="hint">
-                    (Por enquanto essa informação é apenas visual. Depois podemos salvar isso em campos próprios
-                    para gerar relatórios de documentos pendentes.)
-                </small>
             </div>
 
             <!-- Grupos -->
             <div class="form-group form-group-full">
                 <label>Grupos do atleta</label>
                 {% if grupos %}
-                    <div class="chips-grid">
+                    <div class="chips-group">
                         {% for g in grupos %}
-                            <label class="chip-checkbox">
-                                <input type="checkbox" name="grupo_ids" value="{{ g.id }}"
-                                       {% if g.id in grupos_do_atleta %}checked{% endif %}>
+                            <label class="chip-check">
+                                <input type="checkbox" name="grupos_ids" value="{{ g.id }}"
+                                       {% if grupos_ids_do_atleta and g.id in grupos_ids_do_atleta %}checked{% endif %}>
                                 <span>{{ g.nome }}</span>
                             </label>
                         {% endfor %}
@@ -140,24 +99,19 @@
             <!-- Informações adicionais -->
             <div class="form-group form-group-full">
                 <label for="informacoes_adicionais">Informações adicionais</label>
-                <textarea id="informacoes_adicionais" name="informacoes_adicionais"
-                          rows="3" class="form-control"
-                          placeholder="Observações médicas, restrições, observações gerais...">{{ atleta.informacoes_adicionais if atleta }}</textarea>
+                <textarea id="informacoes_adicionais" name="informacoes_adicionais" rows="3"
+                          class="form-control">{{ atleta.informacoes_adicionais if atleta }}</textarea>
             </div>
 
-            <!-- Câmera -->
-            <div class="form-group form-group-full">
-                <label>Foto do atleta</label>
-                <div class="camera-wrapper">
-                    <video id="video" autoplay playsinline></video>
-                    <canvas id="canvas" class="camera-preview"></canvas>
-                    <input type="hidden" id="foto_base64" name="foto_base64">
-                    <button type="button" id="capture" class="btn btn-outline btn-sm">
-                        Capturar foto
-                    </button>
-                </div>
-                <small class="hint">No celular, use a câmera traseira para melhor qualidade.</small>
+            {% if atleta %}
+            <div class="form-group">
+                <label for="status">Status</label>
+                <select id="status" name="status" class="form-control">
+                    <option value="ATIVO" {% if atleta.status == 'ATIVO' %}selected{% endif %}>Ativo</option>
+                    <option value="INATIVO" {% if atleta.status == 'INATIVO' %}selected{% endif %}>Inativo</option>
+                </select>
             </div>
+            {% endif %}
 
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary">

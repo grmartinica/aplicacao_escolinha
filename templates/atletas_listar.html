@@ -5,67 +5,69 @@
 <div class="page-header">
     <div>
         <h1 class="page-title">Atletas</h1>
-        <p class="page-subtitle">Liste, filtre e gerencie os atletas cadastrados.</p>
+        <p class="page-subtitle">Liste e filtre os atletas cadastrados.</p>
     </div>
     <a href="{{ url_for('atletas.novo') }}" class="btn btn-primary">+ Novo atleta</a>
 </div>
 
 <div class="card">
     <div class="card-body">
-        <form class="filter-bar" method="get">
+        <form method="get" class="filter-bar">
             <div class="form-group inline">
                 <label for="nome">Nome</label>
-                <input type="text" id="nome" name="nome"
-                       value="{{ filtros.nome }}" placeholder="Buscar por nome...">
+                <input type="text" id="nome" name="nome" value="{{ filtros.nome }}">
             </div>
 
             <div class="form-group inline">
-                <label for="idade_min">Idade mín.</label>
-                <input type="number" id="idade_min" name="idade_min"
+                <label for="idade_min">Idade mínima</label>
+                <input type="number" id="idade_min" name="idade_min" min="0"
                        value="{{ filtros.idade_min }}">
             </div>
 
             <div class="form-group inline">
-                <label for="idade_max">Idade máx.</label>
-                <input type="number" id="idade_max" name="idade_max"
+                <label for="idade_max">Idade máxima</label>
+                <input type="number" id="idade_max" name="idade_max" min="0"
                        value="{{ filtros.idade_max }}">
             </div>
 
             <div class="form-group inline">
                 <label for="status">Status</label>
                 <select id="status" name="status">
-                    <option value="">Todos</option>
-                    <option value="ATIVO"  {% if filtros.status == 'ATIVO' %}selected{% endif %}>Ativo</option>
-                    <option value="INATIVO"{% if filtros.status == 'INATIVO' %}selected{% endif %}>Inativo</option>
+                    <option value="TODOS" {% if filtros.status == 'TODOS' %}selected{% endif %}>Todos</option>
+                    <option value="ATIVO" {% if filtros.status == 'ATIVO' %}selected{% endif %}>Ativo</option>
+                    <option value="INATIVO" {% if filtros.status == 'INATIVO' %}selected{% endif %}>Inativo</option>
                 </select>
             </div>
 
             <button type="submit" class="btn btn-outline">Filtrar</button>
         </form>
+    </div>
+</div>
 
+<div class="card">
+    <div class="card-body">
         {% if atletas %}
-        <table class="table table-striped mt-2">
+        <table class="table table-striped">
             <thead>
-                <tr>
-                    <th>Nome</th>
-                    <th>Nascimento</th>
-                    <th>Idade (aprox.)</th>
-                    <th>Posição</th>
-                    <th>Status</th>
-                    <th style="width: 1%;">&nbsp;</th>
-                </tr>
+            <tr>
+                <th>Nome</th>
+                <th>Idade</th>
+                <th>Nascimento</th>
+                <th>Posição</th>
+                <th>Status</th>
+                <th style="width: 1%;">&nbsp;</th>
+            </tr>
             </thead>
             <tbody>
-                {% for a in atletas %}
-                {% set idade = ( (now()|default(utcnow())).year - a.data_nascimento.year ) %}
+            {% for a in atletas %}
                 <tr>
                     <td>
-                        <a href="{{ url_for('atletas.editar', atleta_id=a.id) }}" class="link-inline">
+                        <a href="{{ url_for('atletas.editar', atleta_id=a.id) }}" class="link-plain">
                             {{ a.nome }}
                         </a>
                     </td>
+                    <td>{{ a.idade if a.idade is not none else '-' }}</td>
                     <td>{{ a.data_nascimento.strftime('%d/%m/%Y') }}</td>
-                    <td>{{ idade }}</td>
                     <td>{{ a.posicao or '-' }}</td>
                     <td>
                         {% if a.status == 'ATIVO' %}
@@ -76,16 +78,14 @@
                     </td>
                     <td>
                         <a href="{{ url_for('atletas.editar', atleta_id=a.id) }}"
-                           class="btn btn-outline btn-sm">
-                            Editar
-                        </a>
+                           class="btn btn-outline btn-sm">Editar</a>
                     </td>
                 </tr>
-                {% endfor %}
+            {% endfor %}
             </tbody>
         </table>
         {% else %}
-            <p class="empty-state mt-2">Nenhum atleta encontrado com os filtros atuais.</p>
+            <p class="empty-state">Nenhum atleta encontrado com os filtros atuais.</p>
         {% endif %}
     </div>
 </div>

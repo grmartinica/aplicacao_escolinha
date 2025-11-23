@@ -5,7 +5,7 @@
 <div class="page-header">
     <div>
         <h1 class="page-title">Financeiro</h1>
-        <p class="page-subtitle">Acompanhe pagamentos, pendências e inadimplência.</p>
+        <p class="page-subtitle">Resumo de mensalidades e situação de pagamento.</p>
     </div>
 </div>
 
@@ -13,19 +13,49 @@
     <div class="stat-card">
         <div class="stat-label">Total pago</div>
         <div class="stat-value">R$ {{ '%.2f'|format(total_pago) }}</div>
-        <div class="stat-pill">Receitas já confirmadas</div>
+        <div class="stat-pill">Mensalidades já recebidas</div>
     </div>
-
     <div class="stat-card">
         <div class="stat-label">Total pendente</div>
         <div class="stat-value">R$ {{ '%.2f'|format(total_pendente) }}</div>
-        <div class="stat-pill">Mensalidades a receber</div>
+        <div class="stat-pill">Mensalidades em aberto</div>
     </div>
-
     <div class="stat-card">
         <div class="stat-label">Inadimplências</div>
         <div class="stat-value">{{ qtd_inad }}</div>
-        <div class="stat-pill">Mensalidades atrasadas ou pendentes</div>
+        <div class="stat-pill">Títulos em atraso ou pendentes</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="get" class="filter-bar">
+            <div class="form-group inline">
+                <label for="nome">Atleta</label>
+                <input type="text" id="nome" name="nome" value="{{ filtros.nome }}">
+            </div>
+
+            <div class="form-group inline">
+                <label for="status">Status</label>
+                <select id="status" name="status">
+                    <option value="TODOS" {% if filtros.status == 'TODOS' %}selected{% endif %}>Todos</option>
+                    <option value="PENDENTE" {% if filtros.status == 'PENDENTE' %}selected{% endif %}>Pendente</option>
+                    <option value="ATRASADO" {% if filtros.status == 'ATRASADO' %}selected{% endif %}>Atrasado</option>
+                    <option value="PAGO" {% if filtros.status == 'PAGO' %}selected{% endif %}>Pago</option>
+                    <option value="CANCELADO" {% if filtros.status == 'CANCELADO' %}selected{% endif %}>Cancelado</option>
+                </select>
+            </div>
+
+            <div class="form-group inline">
+                <label class="checkbox-inline">
+                    <input type="checkbox" name="inadimplentes" value="1"
+                           {% if filtros.inadimplentes == '1' %}checked{% endif %}>
+                    Mostrar apenas inadimplentes
+                </label>
+            </div>
+
+            <button type="submit" class="btn btn-outline">Filtrar</button>
+        </form>
     </div>
 </div>
 
@@ -51,7 +81,7 @@
                     <td>{{ c.status }}</td>
                 </tr>
             {% else %}
-                <tr><td colspan="5">Sem registros.</td></tr>
+                <tr><td colspan="5">Sem registros com os filtros atuais.</td></tr>
             {% endfor %}
             </tbody>
         </table>
