@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required
 from extensions import db
 from models import Atleta
-from datetime import datetime
+from datetime import datetime, date
 
 atletas_bp = Blueprint('atletas', __name__, url_prefix='/atletas')
 
@@ -10,8 +10,31 @@ atletas_bp = Blueprint('atletas', __name__, url_prefix='/atletas')
 @atletas_bp.route('/listar')
 @login_required
 def listar():
-    atletas = Atleta.query.order_by(Atleta.nome).all()
-    return render_template('atletas_listar.html', atletas=atletas)
+    status = request.args.get('status')          # ex: ATIVO / INATIVO
+    aniversariantes_mes = request.args.get('aniversariantes_mes')  # "1" para filtrar
+    nome = (request.args.get('nome') or '').strip()
+
+    query = Atleta.query
+
+    if status:
+        query = query.filter_by(status=status)
+
+    if aniversariantes_mes == '1':
+        hoje = date.today()
+        query = query.filter(db.extract('month', Atleta.data_nascimento) == hoje.month)
+
+    if nome:
+        query = query.filter(Atleta.nome.ilike(f'%{nome}%'))
+
+    atletas = query.order_by(Atleta.nome).all()
+
+    return render_template(
+        'atletas_listar.html',
+        atletas=atletas,
+        filtro_status=status,
+        filtro_aniversariantes=aniversariantes_mes == '1',
+        filtro_nome=nome,
+    )
 
 
 @atletas_bp.route('/novo', methods=['GET', 'POST'])

@@ -138,6 +138,21 @@ body {
     background: rgba(255, 255, 255, 0.06);
 }
 
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.05);
+    color: #e1e3ee;
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.btn-sm {
+    padding: 0.25rem 0.7rem;
+    font-size: 0.78rem;
+}
+
 /* ---------- LAYOUT PRINCIPAL ---------- */
 .main-container {
     max-width: 1200px;
@@ -179,6 +194,24 @@ body {
     padding: 1.25rem 1.4rem;
 }
 
+.card-title-sm {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+}
+
+.card-text-sm {
+    font-size: 0.9rem;
+    color: #c5c7d8;
+}
+
+.card-list {
+    margin-top: 0.5rem;
+    padding-left: 1.2rem;
+    font-size: 0.9rem;
+    color: #c5c7d8;
+}
+
 /* ---------- DASHBOARD STATS ---------- */
 .stats-grid {
     display: grid;
@@ -186,11 +219,23 @@ body {
     gap: 1rem;
 }
 
+.stat-card-link {
+    text-decoration: none;
+    color: inherit;
+}
+
 .stat-card {
     padding: 1rem 1.1rem;
     border-radius: 16px;
     background: linear-gradient(145deg, rgba(10, 14, 32, 0.96), rgba(18, 30, 56, 0.96));
     border: 1px solid rgba(255, 255, 255, 0.04);
+    transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+    border-color: rgba(255, 180, 90, 0.6);
 }
 
 .stat-label {
@@ -210,6 +255,37 @@ body {
     margin-top: 0.4rem;
     font-size: 0.75rem;
     color: #ffb347;
+}
+
+.stat-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    margin-bottom: 0.4rem;
+}
+
+.stat-icon-green {
+    background: rgba(0, 200, 140, 0.16);
+    color: #3ae6b3;
+}
+
+.stat-icon-red {
+    background: rgba(255, 82, 82, 0.16);
+    color: #ff6a6a;
+}
+
+.stat-icon-amber {
+    background: rgba(255, 184, 0, 0.16);
+    color: #ffd15a;
+}
+
+.stat-icon-blue {
+    background: rgba(86, 144, 255, 0.16);
+    color: #7fa3ff;
 }
 
 /* ---------- TABELAS ---------- */
@@ -247,6 +323,14 @@ body {
     background-color: rgba(255, 255, 255, 0.03);
 }
 
+/* Header de tabela / badge de filtro */
+.table-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.8rem;
+}
+
 /* ---------- BADGES ---------- */
 .badge {
     display: inline-block;
@@ -265,6 +349,11 @@ body {
 .badge-muted {
     background: rgba(160, 164, 187, 0.16);
     color: #cfd2e2;
+}
+
+.badge-warning {
+    background: rgba(255, 184, 0, 0.16);
+    color: #ffd15a;
 }
 
 /* ---------- FORMULÁRIOS ---------- */
@@ -324,6 +413,46 @@ textarea:focus {
     color: #c4c7dd;
 }
 
+/* Barra de filtros */
+.filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1rem;
+    align-items: flex-end;
+}
+
+.form-group.inline {
+    max-width: 220px;
+}
+
+/* ---------- K P I S (financeiro) ---------- */
+.kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.kpi-card {
+    padding: 0.9rem 1rem;
+    border-radius: 16px;
+    background: linear-gradient(145deg, rgba(10, 14, 32, 0.9), rgba(18, 26, 54, 0.9));
+    border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.kpi-label {
+    font-size: 0.78rem;
+    color: #a7aac2;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.3rem;
+}
+
+.kpi-value {
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
 /* ---------- ESTADOS VAZIOS ---------- */
 .empty-state {
     padding: 1.2rem 0.5rem;
@@ -337,4 +466,101 @@ textarea:focus {
     text-align: center;
     font-size: 0.75rem;
     color: #6c718f;
+}
+
+/* ---------- UTILIDADES ---------- */
+.mt-1 { margin-top: 0.5rem; }
+.mt-2 { margin-top: 1rem; }
+
+/* ---------- LOGIN / AUTH ---------- */
+.login-body {
+    min-height: 100vh;
+    background: radial-gradient(circle at top, #20293f 0, #050813 45%, #020308 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #f5f7ff;
+}
+
+.login-wrapper {
+    max-width: 420px;
+    width: 100%;
+    padding: 1.5rem;
+}
+
+.login-card {
+    background: rgba(5, 9, 22, 0.96);
+    border-radius: 20px;
+    padding: 1.8rem 1.7rem;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.brand-logo-lg {
+    width: 56px;
+    height: 56px;
+    border-radius: 999px;
+    background: radial-gradient(circle at 30% 30%, #ffb347, #ff7a00);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+}
+
+.auth-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-top: 1.5rem;
+}
+
+.auth-card {
+    max-width: 480px;
+    width: 100%;
+    background: rgba(5, 9, 22, 0.96);
+    border-radius: 20px;
+    padding: 1.8rem 1.7rem;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.auth-title {
+    font-size: 1.4rem;
+    margin-bottom: 0.4rem;
+}
+
+.auth-subtitle {
+    font-size: 0.9rem;
+    color: #b4b7cc;
+    margin-bottom: 1rem;
+}
+
+.auth-form .form-group {
+    margin-bottom: 0.75rem;
+}
+
+.btn-full {
+    width: 100%;
+}
+
+.auth-links {
+    margin-top: 0.8rem;
+    font-size: 0.85rem;
+}
+
+.auth-links a {
+    color: #ffb347;
+    text-decoration: none;
+}
+
+.auth-links a:hover {
+    text-decoration: underline;
+}
+
+/* ---------- FLASH MESSAGES ---------- */
+.flash-container {
+    margin-bottom: 1rem;
+}
+
+.alert {
+    border-radius: 10px;
+    padding: 0.6rem 0.8rem;
+    font-size: 0.85rem;
 }

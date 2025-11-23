@@ -1,26 +1,66 @@
 {% extends "base.html" %}
 {% block title %}Financeiro | Admin{% endblock %}
+
 {% block content %}
-<h2>Financeiro (Admin)</h2>
-<div class="kpis">
-  <div class="kpi"><div class="t">Total pago</div><div class="v">R$ {{ '%.2f'|format(total_pago) }}</div></div>
-  <div class="kpi"><div class="t">Total pendente</div><div class="v">R$ {{ '%.2f'|format(total_pendente) }}</div></div>
-  <div class="kpi"><div class="t">Inadimplências</div><div class="v">{{ qtd_inad }}</div></div>
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Financeiro</h1>
+        <p class="page-subtitle">
+            Resumo das mensalidades da escolinha e status de pagamento.
+        </p>
+    </div>
 </div>
-<table class="table">
-  <thead><tr><th>Atleta</th><th>Descrição</th><th>Vencimento</th><th>Valor</th><th>Status</th></tr></thead>
-  <tbody>
-    {% for c in itens %}
-      <tr>
-        <td>{{ c.atleta.nome if c.atleta else '-' }}</td>
-        <td>{{ c.descricao }}</td>
-        <td>{{ c.vencimento }}</td>
-        <td>R$ {{ '%.2f'|format(c.valor) }}</td>
-        <td>{{ c.status }}</td>
-      </tr>
-    {% else %}
-      <tr><td colspan="5">Sem registros.</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
+
+<div class="kpis">
+    <div class="kpi-card">
+        <div class="kpi-label">Total pago</div>
+        <div class="kpi-value">R$ {{ '%.2f'|format(total_pago) }}</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Total pendente</div>
+        <div class="kpi-value">R$ {{ '%.2f'|format(total_pendente) }}</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Inadimplências</div>
+        <div class="kpi-value">{{ qtd_inad }}</div>
+    </div>
+</div>
+
+<div class="card mt-2">
+    <div class="card-body">
+        <div class="table-header-row">
+            <h2 class="card-title-sm">Mensalidades</h2>
+            {% if status_filter == 'pendentes' %}
+                <span class="badge badge-warning">Filtrando: pendentes/atrasadas</span>
+            {% endif %}
+        </div>
+
+        {% if itens %}
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Atleta</th>
+                <th>Descrição</th>
+                <th>Vencimento</th>
+                <th>Valor</th>
+                <th>Status</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for c in itens %}
+                <tr>
+                    <td>{{ c.atleta.nome if c.atleta else '-' }}</td>
+                    <td>{{ c.descricao }}</td>
+                    <td>{{ c.vencimento }}</td>
+                    <td>R$ {{ '%.2f'|format(c.valor) }}</td>
+                    <td>{{ c.status }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <p class="empty-state">Nenhuma mensalidade encontrada com o filtro atual.</p>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}

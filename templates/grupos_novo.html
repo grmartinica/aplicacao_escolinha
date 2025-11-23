@@ -1,27 +1,42 @@
-{%extends "base.html" %}
-
+{% extends "base.html" %}
 {% block title %}Novo Grupo{% endblock %}
 
 {% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Novo grupo</h1>
+        <p class="page-subtitle">Crie uma nova turma/categoria para os atletas.</p>
+    </div>
+    <a href="{{ url_for('grupos.listar') }}" class="btn btn-outline">Voltar</a>
+</div>
 
-<h2>Criar Novo Grupo</h2>
-<form method="POST">
-    <div class = form-group>
-        <label>Nome do Grupo</label>
-        <input name="nome" required>
+<div class="card">
+    <div class="card-body">
+        <form method="POST" class="form-grid">
+            <div class="form-group">
+                <label>Nome do grupo *</label>
+                <input name="nome" required class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label>Faixa etária mínima (opcional)</label>
+                <input type="number" name="faixa_etaria_min" class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label>Faixa etária máxima (opcional)</label>
+                <input type="number" name="faixa_etaria_max" class="form-control">
+            </div>
+
+            <div class="form-group form-group-full">
+                <label>Descrição</label>
+                <textarea name="descricao" class="form-control" rows="2"></textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Salvar grupo</button>
+            </div>
+        </form>
     </div>
-    <div class = form-group>
-        <label>Faixa Etária Mínima (opcional)</label>
-        <input type="number" name="faixa_min">
-    </div>
-    <div class = form-group>
-        <label>Faixa Etária Máxima (opcional)</label>
-        <input type="number" name="faixa_max">
-    </div>
-    <div class = form-group>
-        <label>Descrição</label>
-        <textarea name="descricao"></textarea>
-    </div>
-    <button type="submit" class="btn-primary">Salvar Grupo</button>
-</form>
+</div>
 {% endblock %}

@@ -1,32 +1,54 @@
-{%extends "base.html" %}
-
+{% extends "base.html" %}
 {% block title %}Grupos{% endblock %}
 
 {% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Grupos</h1>
+        <p class="page-subtitle">Categorias e turmas da escolinha.</p>
+    </div>
+    <a href="{{ url_for('grupos.novo') }}" class="btn btn-primary">+ Novo grupo</a>
+</div>
 
-<h2>Lista de Grupos</h2>
-<a href="{{url_for('grupos.novo')}}" class="btn">+ Novo Grupo</a>
-<br><br>
-<table class="table">
-    <tr>
-        <th>ID</th>
-        <th>Nome</th>
-        <th>Descrição</th>
-        <th>Quantidade de Atletas</th>
-        <th>Faixa Etária</th>
-    </tr>
-    {% for g in grupos %}
-    <tr>
-        <td>{{ g.nome }}</td>
-        <td>
-            {% if g.faixa_etaria_minima and g.faixa_etaria_maxima %}
-                {{ g.faixa_etaria_minima or '?'}} - {{ g.faixa_etaria_maxima or '?' }} anos
-            {% else %}
-                Livre
-            {% endif %}
-        </td>
-        <td>{{ g.descricao or '-' }}</td>
-    </tr>
-    {% endfor %}
-</table>
+<div class="card">
+    <div class="card-body">
+        {% if grupos %}
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Faixa etária</th>
+                <th>Qtd. atletas</th>
+                <th>Descrição</th>
+                <th style="width:1%"></th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for g in grupos %}
+                <tr>
+                    <td>{{ g.nome }}</td>
+                    <td>
+                        {% if g.faixa_etaria_min and g.faixa_etaria_max %}
+                            {{ g.faixa_etaria_min }} - {{ g.faixa_etaria_max }} anos
+                        {% else %}
+                            Livre
+                        {% endif %}
+                    </td>
+                    <td>{{ g.atletas|length }}</td>
+                    <td>{{ g.descricao or '-' }}</td>
+                    <td>
+                        <a href="{{ url_for('grupos.gerenciar', grupo_id=g.id) }}"
+                           class="btn btn-outline btn-sm">
+                            Gerenciar
+                        </a>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <p class="empty-state">Nenhum grupo cadastrado ainda.</p>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}

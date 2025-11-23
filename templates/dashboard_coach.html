@@ -1,8 +1,26 @@
 {% extends "base.html" %}
-
 {% block title %}Painel de Professor{% endblock %}
 
 {% block content %}
-<h2>Bem-vindo ao Painel de Professor</h2>
-<p>Gerencie suas turmas e acompanhe o desempenho dos alunos a partir deste painel.</p>
-(% endblock %)
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Painel do professor</h1>
+        <p class="page-subtitle">
+            Acompanhe suas turmas, treinos e presença dos atletas.
+        </p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <p class="card-text-sm">
+            Use o menu superior para acessar:
+        </p>
+        <ul class="card-list">
+            <li><strong>Atletas:</strong> veja a lista de alunos e seus dados básicos.</li>
+            <li><strong>Grupos:</strong> gerencie quais atletas fazem parte de cada categoria.</li>
+            <li><strong>Agenda:</strong> crie treinos e registre a presença de cada atleta.</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

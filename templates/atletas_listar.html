@@ -5,9 +5,45 @@
 <div class="page-header">
     <div>
         <h1 class="page-title">Atletas</h1>
-        <p class="page-subtitle">Lista de atletas cadastrados na escolinha.</p>
+        <p class="page-subtitle">
+            Lista de atletas cadastrados na escolinha.
+            {% if filtro_status or filtro_aniversariantes or filtro_nome %}
+                <span class="badge badge-warning">Filtros ativos</span>
+            {% endif %}
+        </p>
     </div>
     <a href="{{ url_for('atletas.novo') }}" class="btn btn-primary">+ Novo atleta</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="GET" class="filter-bar">
+            <div class="form-group inline">
+                <label>Nome</label>
+                <input type="text" name="nome" class="form-control"
+                       value="{{ filtro_nome or '' }}">
+            </div>
+            <div class="form-group inline">
+                <label>Status</label>
+                <select name="status" class="form-control">
+                    <option value="">Todos</option>
+                    <option value="ATIVO" {% if filtro_status == 'ATIVO' %}selected{% endif %}>Ativo</option>
+                    <option value="INATIVO" {% if filtro_status == 'INATIVO' %}selected{% endif %}>Inativo</option>
+                </select>
+            </div>
+            <div class="form-group inline">
+                <label>&nbsp;</label>
+                <div>
+                    <label class="checkbox-inline">
+                        <input type="checkbox" name="aniversariantes_mes" value="1"
+                               {% if filtro_aniversariantes %}checked{% endif %}>
+                        Apenas aniversariantes do mês
+                    </label>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-secondary mt-1">Aplicar filtros</button>
+        </form>
+    </div>
 </div>
 
 <div class="card">
@@ -15,16 +51,16 @@
         {% if atletas %}
         <table class="table table-striped">
             <thead>
-                <tr>
-                    <th>Nome</th>
-                    <th>Nascimento</th>
-                    <th>Posição</th>
-                    <th>Status</th>
-                    <th style="width: 1%;">&nbsp;</th>
-                </tr>
+            <tr>
+                <th>Nome</th>
+                <th>Nascimento</th>
+                <th>Posição</th>
+                <th>Status</th>
+                <th style="width: 1%;">&nbsp;</th>
+            </tr>
             </thead>
             <tbody>
-                {% for a in atletas %}
+            {% for a in atletas %}
                 <tr>
                     <td>{{ a.nome }}</td>
                     <td>{{ a.data_nascimento }}</td>
@@ -37,16 +73,17 @@
                         {% endif %}
                     </td>
                     <td>
-                        <a href="{{ url_for('atletas.editar', atleta_id=a.id) }}" class="btn btn-outline btn-sm">
+                        <a href="{{ url_for('atletas.editar', atleta_id=a.id) }}"
+                           class="btn btn-outline btn-sm">
                             Editar
                         </a>
                     </td>
                 </tr>
-                {% endfor %}
+            {% endfor %}
             </tbody>
         </table>
         {% else %}
-        <p class="empty-state">Nenhum atleta cadastrado ainda.</p>
+            <p class="empty-state">Nenhum atleta encontrado.</p>
         {% endif %}
     </div>
 </div>

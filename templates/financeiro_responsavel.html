@@ -1,21 +1,44 @@
 {% extends "base.html" %}
 {% block title %}Financeiro | Responsável{% endblock %}
+
 {% block content %}
-<h2>Minhas mensalidades</h2>
-<table class="table">
-  <thead><tr><th>Atleta</th><th>Descrição</th><th>Vencimento</th><th>Valor</th><th>Status</th></tr></thead>
-  <tbody>
-  {% for c in itens %}
-    <tr>
-      <td>{{ c.atleta.nome if c.atleta else '-' }}</td>
-      <td>{{ c.descricao }}</td>
-      <td>{{ c.vencimento }}</td>
-      <td>R$ {{ '%.2f'|format(c.valor) }}</td>
-      <td>{{ c.status }}</td>
-    </tr>
-  {% else %}
-    <tr><td colspan="5">Sem mensalidades encontradas.</td></tr>
-  {% endfor %}
-  </tbody>
-</table>
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Minhas mensalidades</h1>
+        <p class="page-subtitle">
+            Consulte os valores, vencimentos e status das mensalidades do(s) atleta(s).
+        </p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if itens %}
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Atleta</th>
+                <th>Descrição</th>
+                <th>Vencimento</th>
+                <th>Valor</th>
+                <th>Status</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for c in itens %}
+                <tr>
+                    <td>{{ c.atleta.nome if c.atleta else '-' }}</td>
+                    <td>{{ c.descricao }}</td>
+                    <td>{{ c.vencimento }}</td>
+                    <td>R$ {{ '%.2f'|format(c.valor) }}</td>
+                    <td>{{ c.status }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <p class="empty-state">Sem mensalidades encontradas.</p>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}

@@ -1,11 +1,11 @@
-from flask import Blueprint, render_template
-from flask import Blueprint, render_template, redirect, url_for
+from flask import Blueprint, render_template, redirect, url_for, request
 from flask_login import login_required, current_user
 from datetime import date
 from extensions import db
 from models import Atleta, ContaReceber
 
 dashboard_bp = Blueprint('dashboard', __name__)
+
 
 @dashboard_bp.route('/')
 @login_required
@@ -16,21 +16,25 @@ def index():
     elif current_user.role == 'COACH':
         return render_template('dashboard_coach.html')
     elif current_user.role == 'PARENT':
+        # Responsável vai direto pro financeiro dele
         return redirect(url_for('financeiro.resumo_responsavel'))
     else:
         return redirect(url_for('auth.login'))
 
 
 def admin_dashboard():
+    # Cards principais do dashboard
     total_atletas = Atleta.query.filter_by(status='ATIVO').count()
 
     inadimplentes = ContaReceber.query.filter(
-        ContaReceber.status != 'PAGO'
+        ContaReceber.status.in_(('PENDENTE', 'ATRASADO'))
     ).count()
 
-    saldo_a_receber = float(sum(
-        [c.valor for c in ContaReceber.query.filter(ContaReceber.status != 'PAGO')]
-    ))
+    saldo_a_receber = float(
+        db.session.query(db.func.coalesce(db.func.sum(ContaReceber.valor), 0))
+        .filter(ContaReceber.status.in_(('PENDENTE', 'ATRASADO')))
+        .scalar()
+    )
 
     hoje = date.today()
     aniversariantes = Atleta.query.filter(
@@ -42,5 +46,5 @@ def admin_dashboard():
         total_atletas=total_atletas,
         inadimplentes=inadimplentes,
         saldo=saldo_a_receber,
-        aniversariantes=aniversariantes
+        aniversariantes=aniversariantes,
     )

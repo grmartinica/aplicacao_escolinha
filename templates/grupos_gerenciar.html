@@ -1,42 +1,52 @@
 {% extends "base.html" %}
-
 {% block title %}Gerenciar Grupo - {{ grupo.nome }}{% endblock %}
 
 {% block content %}
 <div class="page-header">
-    <h1>Gerenciar grupo: {{ grupo.nome }}</h1>
-    <p>Selecione os atletas que farão parte deste grupo. Use os filtros por idade e nome.</p>
+    <div>
+        <h1 class="page-title">Gerenciar grupo</h1>
+        <p class="page-subtitle">
+            Grupo <strong>{{ grupo.nome }}</strong> – selecione os atletas que farão parte desta turma.
+        </p>
+    </div>
+    <a href="{{ url_for('grupos.listar') }}" class="btn btn-outline">Voltar</a>
 </div>
 
 <div class="card">
-    <form method="GET" class="filter-bar">
-        <input type="hidden" name="grupo_id" value="{{ grupo.id }}">
-        <div class="form-group inline">
-            <label for="nome">Nome</label>
-            <input type="text" name="nome" id="nome" value="{{ request.args.get('nome', '') }}">
-        </div>
-        <div class="form-group inline">
-            <label for="idade_min">Idade mínima</label>
-            <input type="number" name="idade_min" id="idade_min" value="{{ request.args.get('idade_min', '') }}">
-        </div>
-        <div class="form-group inline">
-            <label for="idade_max">Idade máxima</label>
-            <input type="number" name="idade_max" id="idade_max" value="{{ request.args.get('idade_max', '') }}">
-        </div>
-        <button type="submit" class="btn-secondary">Filtrar</button>
-    </form>
+    <div class="card-body">
+        <form method="GET" class="filter-bar">
+            <div class="form-group inline">
+                <label for="nome">Nome</label>
+                <input type="text" name="nome" id="nome"
+                       value="{{ request.args.get('nome', '') }}" class="form-control">
+            </div>
+            <div class="form-group inline">
+                <label for="idade_min">Idade mínima</label>
+                <input type="number" name="idade_min" id="idade_min"
+                       value="{{ request.args.get('idade_min', '') }}" class="form-control">
+            </div>
+            <div class="form-group inline">
+                <label for="idade_max">Idade máxima</label>
+                <input type="number" name="idade_max" id="idade_max"
+                       value="{{ request.args.get('idade_max', '') }}" class="form-control">
+            </div>
+            <button type="submit" class="btn btn-secondary mt-1">Filtrar</button>
+        </form>
+    </div>
+</div>
 
-    <form method="POST" class="mt-2">
-        <table class="table">
-            <thead>
+<div class="card">
+    <div class="card-body">
+        <form method="POST">
+            <table class="table table-striped">
+                <thead>
                 <tr>
                     <th>Incluir</th>
                     <th>Nome</th>
                     <th>Data de nascimento</th>
-                    <th>Idade (aprox.)</th>
                 </tr>
-            </thead>
-            <tbody>
+                </thead>
+                <tbody>
                 {% if atletas %}
                     {% for atleta in atletas %}
                         <tr>
@@ -47,25 +57,20 @@
                             </td>
                             <td>{{ atleta.nome }}</td>
                             <td>{{ atleta.data_nascimento.strftime('%d/%m/%Y') }}</td>
-                            <td>
-                                {% set age = ( (loop.current_time or none), ) %}
-                                {{ ( (cycler('')|first), ) }}
-                                {# idade exata não calculada aqui, mantemos simples #}
-                            </td>
                         </tr>
                     {% endfor %}
                 {% else %}
                     <tr>
-                        <td colspan="4">Nenhum atleta encontrado com os filtros atuais.</td>
+                        <td colspan="3">Nenhum atleta encontrado com os filtros atuais.</td>
                     </tr>
                 {% endif %}
-            </tbody>
-        </table>
+                </tbody>
+            </table>
 
-        <div class="form-actions">
-            <a href="{{ url_for('grupos.listar') }}" class="btn-secondary">Voltar</a>
-            <button type="submit" class="btn-primary">Salvar grupo</button>
-        </div>
-    </form>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Salvar grupo</button>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}

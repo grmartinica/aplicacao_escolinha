@@ -1,9 +1,25 @@
 {% extends "base.html" %}
-
 {% block title %}Painel do Responsável{% endblock %}
 
 {% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Painel do responsável</h1>
+        <p class="page-subtitle">
+            Acompanhe as mensalidades e atividades do(s) seu(s) atleta(s).
+        </p>
+    </div>
+</div>
 
-<h2>Bem-vindo ao Painel do Responsável</h2>
-<p>Acompanhe o progresso e as atividades do seu filho a partir deste painel.</p>
+<div class="card">
+    <div class="card-body">
+        <p class="card-text-sm">
+            No momento, sua principal área é o <strong>Financeiro</strong>, onde você pode
+            consultar as mensalidades, vencimentos e status de pagamento.
+        </p>
+        <a href="{{ url_for('financeiro.resumo_responsavel') }}" class="btn btn-primary mt-1">
+            Ver minhas mensalidades
+        </a>
+    </div>
+</div>
 {% endblock %}

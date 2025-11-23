@@ -4,34 +4,63 @@
 {% block content %}
 <div class="page-header">
     <div>
-        <h1 class="page-title">Bem-vindo ao Painel Administrativo</h1>
-        <p class="page-subtitle">Gerencie as operações da escolinha a partir deste painel.</p>
+        <h1 class="page-title">Dashboard administrativo</h1>
+        <p class="page-subtitle">
+            Visão geral da escolinha: atletas, finanças e indicadores do mês.
+        </p>
     </div>
 </div>
 
 <div class="stats-grid">
-    <div class="stat-card">
-        <div class="stat-label">Atletas Ativos</div>
-        <div class="stat-value">{{ total_atletas }}</div>
-        <div class="stat-pill">Jogadores com status ATIVO</div>
-    </div>
+    <!-- Atletas ativos -->
+    <a href="{{ url_for('atletas.listar', status='ATIVO') }}" class="stat-card-link">
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-green">⚽</div>
+            <div class="stat-label">Atletas ativos</div>
+            <div class="stat-value">{{ total_atletas }}</div>
+            <div class="stat-pill">Jogadores com status ATIVO</div>
+        </div>
+    </a>
 
-    <div class="stat-card">
-        <div class="stat-label">Atletas inadimplentes</div>
-        <div class="stat-value">{{ inadimplentes }}</div>
-        <div class="stat-pill">Com mensalidades pendentes/atrasadas</div>
-    </div>
+    <!-- Inadimplentes -->
+    <a href="{{ url_for('financeiro.resumo', status='pendentes') }}" class="stat-card-link">
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-red">!</div>
+            <div class="stat-label">Atletas inadimplentes</div>
+            <div class="stat-value">{{ inadimplentes }}</div>
+            <div class="stat-pill">Com mensalidades pendentes/atrasadas</div>
+        </div>
+    </a>
 
-    <div class="stat-card">
-        <div class="stat-label">Saldo a receber</div>
-        <div class="stat-value">R$ {{ '%.2f'|format(saldo) }}</div>
-        <div class="stat-pill">Total de mensalidades abertas</div>
-    </div>
+    <!-- Saldo a receber -->
+    <a href="{{ url_for('financeiro.resumo', status='pendentes') }}" class="stat-card-link">
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-amber">R$</div>
+            <div class="stat-label">Saldo a receber</div>
+            <div class="stat-value">R$ {{ '%.2f'|format(saldo) }}</div>
+            <div class="stat-pill">Total de mensalidades em aberto</div>
+        </div>
+    </a>
 
-    <div class="stat-card">
-        <div class="stat-label">Aniversariantes do mês</div>
-        <div class="stat-value">{{ aniversariantes }}</div>
-        <div class="stat-pill">Atletas que fazem aniversário este mês</div>
+    <!-- Aniversariantes -->
+    <a href="{{ url_for('atletas.listar', aniversariantes_mes=1) }}" class="stat-card-link">
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-blue">🎉</div>
+            <div class="stat-label">Aniversariantes do mês</div>
+            <div class="stat-value">{{ aniversariantes }}</div>
+            <div class="stat-pill">Atletas que fazem aniversário neste mês</div>
+        </div>
+    </a>
+</div>
+
+<!-- Espaço para futuros gráficos/cards -->
+<div class="card mt-2">
+    <div class="card-body">
+        <h2 class="card-title-sm">Visão rápida</h2>
+        <p class="card-text-sm">
+            Em breve você poderá visualizar gráficos de evolução de alunos, presença em treinos
+            e fluxo financeiro mês a mês diretamente neste painel.
+        </p>
     </div>
 </div>
 {% endblock %}
