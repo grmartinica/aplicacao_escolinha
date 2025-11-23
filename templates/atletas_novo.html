@@ -107,21 +107,34 @@
             </div>
 
             <!-- CÂMERA / FOTO -->
-            <div class="form-group form-group-full">
-                <label>Foto do atleta</label>
-                <div class="camera-wrapper">
-                    <video id="video" autoplay playsinline></video>
-                    <canvas id="canvas" style="display:none;"></canvas>
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="section-title">Foto do atleta</h3>
+
+                    {% if atleta and atleta.fotos and atleta.fotos[0].foto_path %}
+                        <div class="current-photo">
+                            <p class="page-subtitle">Foto atual:</p>
+                            <img src="{{ url_for('static', filename=atleta.fotos[0].foto_path) }}"
+                                alt="Foto do atleta"
+                                class="athlete-photo-preview">
+                        </div>
+                    {% endif %}
+
+                    <div class="camera-wrapper">
+                        <video id="video" autoplay playsinline class="camera-video"></video>
+                        <canvas id="canvas" style="display:none;"></canvas>
+                    </div>
+
                     <div class="camera-actions">
-                        <button type="button" id="capture" class="btn btn-outline">
-                            Tirar foto com a câmera
+                        <button type="button" class="btn btn-outline" id="open-camera">
+                            Abrir câmera
+                        </button>
+                        <button type="button" class="btn btn-primary" id="capture">
+                            Capturar foto
                         </button>
                     </div>
+
                     <input type="hidden" id="foto_base64" name="foto_base64">
-                    <p class="camera-hint">
-                        Permita o acesso à câmera do dispositivo para capturar a foto do atleta
-                        (funciona em desktop e celular).
-                    </p>
                 </div>
             </div>
 
