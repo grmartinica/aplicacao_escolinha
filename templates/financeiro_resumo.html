@@ -4,76 +4,57 @@
 {% block content %}
 <div class="page-header">
     <div>
-        <h1 class="page-title">Financeiro (Admin)</h1>
-        <p class="page-subtitle">Acompanhe recebimentos, pendências e inadimplência.</p>
+        <h1 class="page-title">Financeiro</h1>
+        <p class="page-subtitle">Acompanhe pagamentos, pendências e inadimplência.</p>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">Total pago</div>
+        <div class="stat-value">R$ {{ '%.2f'|format(total_pago) }}</div>
+        <div class="stat-pill">Receitas já confirmadas</div>
     </div>
 
-    <form method="get" class="filter-form">
-        <select name="status">
-            <option value="">Todos</option>
-            <option value="PENDENTE" {% if filtros.status == 'PENDENTE' %}selected{% endif %}>Pendentes</option>
-            <option value="PAGO" {% if filtros.status == 'PAGO' %}selected{% endif %}>Pagos</option>
-            <option value="INADIMPLENTE" {% if filtros.status == 'INADIMPLENTE' %}selected{% endif %}>
-                Inadimplentes (pendente + atrasado)
-            </option>
-        </select>
-        <input type="text" name="nome" placeholder="Nome do atleta" value="{{ filtros.nome }}">
-        <button type="submit" class="btn btn-outline">Filtrar</button>
-    </form>
+    <div class="stat-card">
+        <div class="stat-label">Total pendente</div>
+        <div class="stat-value">R$ {{ '%.2f'|format(total_pendente) }}</div>
+        <div class="stat-pill">Mensalidades a receber</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">Inadimplências</div>
+        <div class="stat-value">{{ qtd_inad }}</div>
+        <div class="stat-pill">Mensalidades atrasadas ou pendentes</div>
+    </div>
 </div>
 
 <div class="card">
-  <div class="card-body">
-    <div class="kpis">
-      <div class="kpi">
-        <div class="t">Total pago</div>
-        <div class="v">R$ {{ '%.2f'|format(total_pago) }}</div>
-      </div>
-      <div class="kpi">
-        <div class="t">Total pendente</div>
-        <div class="v">R$ {{ '%.2f'|format(total_pendente) }}</div>
-      </div>
-      <div class="kpi">
-        <div class="t">Inadimplências</div>
-        <div class="v">{{ qtd_inad }}</div>
-      </div>
+    <div class="card-body">
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Atleta</th>
+                <th>Descrição</th>
+                <th>Vencimento</th>
+                <th>Valor</th>
+                <th>Status</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for c in itens %}
+                <tr>
+                    <td>{{ c.atleta.nome if c.atleta else '-' }}</td>
+                    <td>{{ c.descricao }}</td>
+                    <td>{{ c.vencimento.strftime('%d/%m/%Y') }}</td>
+                    <td>R$ {{ '%.2f'|format(c.valor) }}</td>
+                    <td>{{ c.status }}</td>
+                </tr>
+            {% else %}
+                <tr><td colspan="5">Sem registros.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
     </div>
-
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Atleta</th>
-          <th>Descrição</th>
-          <th>Vencimento</th>
-          <th>Valor</th>
-          <th>Status</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for c in itens %}
-          <tr>
-            <td>{{ c.atleta.nome if c.atleta else '-' }}</td>
-            <td>{{ c.descricao }}</td>
-            <td>{{ c.vencimento }}</td>
-            <td>R$ {{ '%.2f'|format(c.valor) }}</td>
-            <td>{{ c.status }}</td>
-            <td>
-                {% if c.atleta and c.atleta.responsavel_telefone %}
-                    <a href="{{ url_for('financeiro.cobrar_whatsapp', atleta_id=c.atleta.id) }}"
-                       class="btn btn-outline btn-sm">
-                        Cobrar via WhatsApp
-                    </a>
-                {% else %}
-                    <span class="badge badge-muted">Sem telefone</span>
-                {% endif %}
-            </td>
-          </tr>
-        {% else %}
-          <tr><td colspan="6">Sem registros para os filtros informados.</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
 </div>
 {% endblock %}

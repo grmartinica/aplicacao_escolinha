@@ -5,111 +5,87 @@
 <div class="page-header">
     <div>
         <h1 class="page-title">Atletas</h1>
-        <p class="page-subtitle">
-            Consulte e gerencie os atletas cadastrados na escolinha.
-        </p>
+        <p class="page-subtitle">Liste, filtre e gerencie os atletas cadastrados.</p>
     </div>
     <a href="{{ url_for('atletas.novo') }}" class="btn btn-primary">+ Novo atleta</a>
 </div>
 
 <div class="card">
     <div class="card-body">
-
-        <!-- Filtros -->
-        <form method="get" class="form-grid" style="margin-bottom: 1rem;">
-            <div class="form-group">
-                <label for="filtro_nome">Nome</label>
-                <input type="text"
-                       id="filtro_nome"
-                       name="nome"
-                       class="form-control"
-                       placeholder="Buscar por nome"
-                       value="{{ filtros.nome }}">
+        <form class="filter-bar" method="get">
+            <div class="form-group inline">
+                <label for="nome">Nome</label>
+                <input type="text" id="nome" name="nome"
+                       value="{{ filtros.nome }}" placeholder="Buscar por nome...">
             </div>
 
-            <div class="form-group">
-                <label for="filtro_idade_min">Idade mínima</label>
-                <input type="number"
-                       id="filtro_idade_min"
-                       name="idade_min"
-                       class="form-control"
-                       min="1"
+            <div class="form-group inline">
+                <label for="idade_min">Idade mín.</label>
+                <input type="number" id="idade_min" name="idade_min"
                        value="{{ filtros.idade_min }}">
             </div>
 
-            <div class="form-group">
-                <label for="filtro_idade_max">Idade máxima</label>
-                <input type="number"
-                       id="filtro_idade_max"
-                       name="idade_max"
-                       class="form-control"
-                       min="1"
+            <div class="form-group inline">
+                <label for="idade_max">Idade máx.</label>
+                <input type="number" id="idade_max" name="idade_max"
                        value="{{ filtros.idade_max }}">
             </div>
 
-            <div class="form-group">
-                <label for="filtro_status">Status</label>
-                <select id="filtro_status" name="status" class="form-control">
+            <div class="form-group inline">
+                <label for="status">Status</label>
+                <select id="status" name="status">
                     <option value="">Todos</option>
-                    <option value="ATIVO" {% if filtros.status == 'ATIVO' %}selected{% endif %}>Ativo</option>
-                    <option value="INATIVO" {% if filtros.status == 'INATIVO' %}selected{% endif %}>Inativo</option>
+                    <option value="ATIVO"  {% if filtros.status == 'ATIVO' %}selected{% endif %}>Ativo</option>
+                    <option value="INATIVO"{% if filtros.status == 'INATIVO' %}selected{% endif %}>Inativo</option>
                 </select>
             </div>
 
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary">Aplicar filtros</button>
-                <a href="{{ url_for('atletas.listar') }}" class="btn btn-outline">Limpar</a>
-            </div>
+            <button type="submit" class="btn btn-outline">Filtrar</button>
         </form>
 
-        <!-- Lista -->
         {% if atletas %}
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Nome</th>
-                        <th>Data nasc.</th>
-                        <th>Posição</th>
-                        <th>Status</th>
-                        <th style="width: 1%;">&nbsp;</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for a in atletas %}
-                    <tr>
-                        <td>
-                            <a href="{{ url_for('atletas.editar', atleta_id=a.id) }}"
-                               style="color: #ffb347; text-decoration: none;">
-                                {{ a.nome }}
-                            </a>
-                        </td>
-                        <td>
-                            {% if a.data_nascimento %}
-                                {{ a.data_nascimento.strftime('%d/%m/%Y') }}
-                            {% else %}
-                                -
-                            {% endif %}
-                        </td>
-                        <td>{{ a.posicao or '-' }}</td>
-                        <td>
-                            {% if a.status == 'ATIVO' %}
-                                <span class="badge badge-success">ATIVO</span>
-                            {% else %}
-                                <span class="badge badge-muted">INATIVO</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <a href="{{ url_for('atletas.editar', atleta_id=a.id) }}"
-                               class="btn btn-outline btn-sm">
-                                Editar
-                            </a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <table class="table table-striped mt-2">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Nascimento</th>
+                    <th>Idade (aprox.)</th>
+                    <th>Posição</th>
+                    <th>Status</th>
+                    <th style="width: 1%;">&nbsp;</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in atletas %}
+                {% set idade = ( (now()|default(utcnow())).year - a.data_nascimento.year ) %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('atletas.editar', atleta_id=a.id) }}" class="link-inline">
+                            {{ a.nome }}
+                        </a>
+                    </td>
+                    <td>{{ a.data_nascimento.strftime('%d/%m/%Y') }}</td>
+                    <td>{{ idade }}</td>
+                    <td>{{ a.posicao or '-' }}</td>
+                    <td>
+                        {% if a.status == 'ATIVO' %}
+                            <span class="badge badge-success">ATIVO</span>
+                        {% else %}
+                            <span class="badge badge-muted">INATIVO</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('atletas.editar', atleta_id=a.id) }}"
+                           class="btn btn-outline btn-sm">
+                            Editar
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
         {% else %}
-            <p class="empty-state">Nenhum atleta encontrado com os filtros atuais.</p>
+            <p class="empty-state mt-2">Nenhum atleta encontrado com os filtros atuais.</p>
         {% endif %}
     </div>
 </div>

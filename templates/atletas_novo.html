@@ -18,7 +18,6 @@
 <div class="card">
     <div class="card-body">
         <form method="post" class="form-grid">
-
             <!-- Dados básicos -->
             <div class="form-group">
                 <label for="nome">Nome completo *</label>
@@ -39,6 +38,46 @@
                        value="{{ atleta.posicao if atleta }}">
             </div>
 
+            <!-- RG / CPF -->
+            <div class="form-group">
+                <label for="rg">RG</label>
+                <input type="text" id="rg" name="rg" class="form-control"
+                       value="{{ atleta.rg if atleta }}">
+            </div>
+
+            <div class="form-group">
+                <label for="cpf">CPF</label>
+                <input type="text" id="cpf" name="cpf" class="form-control"
+                       value="{{ atleta.cpf if atleta }}">
+            </div>
+
+            <!-- Telefone / atestado -->
+            <div class="form-group">
+                <label for="telefone">Telefone do responsável</label>
+                <input type="text" id="telefone" name="telefone" class="form-control"
+                       value="{{ atleta.telefone if atleta }}">
+            </div>
+
+            <div class="form-group">
+                <label for="validade_atestado">Validade do atestado médico</label>
+                <input type="date" id="validade_atestado" name="validade_atestado" class="form-control"
+                       value="{{ atleta.validade_atestado if atleta }}">
+            </div>
+
+            <!-- Plano -->
+            <div class="form-group">
+                <label for="plano_id">Plano</label>
+                <select id="plano_id" name="plano_id" class="form-control">
+                    <option value="">Selecione...</option>
+                    {% for p in planos %}
+                        <option value="{{ p.id }}"
+                                {% if plano_atual_id == p.id %}selected{% endif %}>
+                            {{ p.nome }} – R$ {{ '%.2f'|format(p.valor_mensal) }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
             {% if atleta %}
             <div class="form-group">
                 <label for="status">Status</label>
@@ -49,169 +88,75 @@
             </div>
             {% endif %}
 
-            <!-- Documento: RG / CPF -->
-            <div class="form-group">
-                <label>Documento</label>
-                <select id="tipo_doc" class="form-control">
-                    <option value="">Selecione...</option>
-                    <option value="RG">RG</option>
-                    <option value="CPF">CPF</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="rg">RG</label>
-                <input type="text" id="rg" name="rg" class="form-control"
-                       value="{{ atleta.rg if atleta }}" disabled>
-            </div>
-
-            <div class="form-group">
-                <label for="cpf">CPF</label>
-                <input type="text" id="cpf" name="cpf" class="form-control"
-                       value="{{ atleta.cpf if atleta }}" disabled>
-            </div>
-
-            <!-- Endereço -->
-            <div class="form-group">
-                <label for="cep">CEP</label>
-                <input type="text" id="cep" name="cep" class="form-control"
-                       placeholder="00000-000"
-                       value="{{ atleta.cep if atleta }}">
-            </div>
-
-            <div class="form-group">
-                <label for="logradouro">Endereço</label>
-                <input type="text" id="logradouro" name="logradouro" class="form-control"
-                       value="{{ atleta.logradouro if atleta }}">
-            </div>
-
-            <div class="form-group">
-                <label for="numero">Número</label>
-                <input type="text" id="numero" name="numero" class="form-control"
-                       value="{{ atleta.numero if atleta }}">
-            </div>
-
-            <div class="form-group">
-                <label for="complemento">Complemento</label>
-                <input type="text" id="complemento" name="complemento" class="form-control"
-                       value="{{ atleta.complemento if atleta }}">
-            </div>
-
-            <div class="form-group">
-                <label for="bairro">Bairro</label>
-                <input type="text" id="bairro" name="bairro" class="form-control"
-                       value="{{ atleta.bairro if atleta }}">
-            </div>
-
-            <div class="form-group">
-                <label for="cidade">Cidade</label>
-                <input type="text" id="cidade" name="cidade" class="form-control"
-                       value="{{ atleta.cidade if atleta }}">
-            </div>
-
-            <div class="form-group">
-                <label for="estado">UF</label>
-                <input type="text" id="estado" name="estado" class="form-control"
-                       maxlength="2"
-                       value="{{ atleta.estado if atleta }}">
-            </div>
-
-            <!-- Documentos -->
-            <div class="form-group">
+            <!-- Documentos (checkbox) -->
+            <div class="form-group form-group-full">
                 <label>Documentos entregues</label>
-                <label class="checkbox-inline">
-                    <input type="checkbox" name="doc_rg_ok"
-                           {% if atleta and atleta.doc_rg_ok %}checked{% endif %}>
-                    RG
-                </label><br>
-                <label class="checkbox-inline">
-                    <input type="checkbox" name="doc_cpf_ok"
-                           {% if atleta and atleta.doc_cpf_ok %}checked{% endif %}>
-                    CPF
-                </label><br>
-                <label class="checkbox-inline">
-                    <input type="checkbox" name="doc_comprov_endereco_ok"
-                           {% if atleta and atleta.doc_comprov_endereco_ok %}checked{% endif %}>
-                    Comprovante de endereço
-                </label><br>
-                <label class="checkbox-inline">
-                    <input type="checkbox" name="doc_decl_escolar_ok"
-                           {% if atleta and atleta.doc_decl_escolar_ok %}checked{% endif %}>
-                    Declaração escolar
-                </label><br>
-                <label class="checkbox-inline">
-                    <input type="checkbox" name="doc_atestado_medico_ok"
-                           {% if atleta and atleta.doc_atestado_medico_ok %}checked{% endif %}>
-                    Atestado médico
-                </label>
+                <div class="chips-grid">
+                    <label class="chip-checkbox">
+                        <input type="checkbox" name="docs[]" value="rg">
+                        <span>RG</span>
+                    </label>
+                    <label class="chip-checkbox">
+                        <input type="checkbox" name="docs[]" value="cpf">
+                        <span>CPF</span>
+                    </label>
+                    <label class="chip-checkbox">
+                        <input type="checkbox" name="docs[]" value="comprovante_endereco">
+                        <span>Comprovante de endereço</span>
+                    </label>
+                    <label class="chip-checkbox">
+                        <input type="checkbox" name="docs[]" value="declaracao_escolar">
+                        <span>Declaração escolar</span>
+                    </label>
+                    <label class="chip-checkbox">
+                        <input type="checkbox" name="docs[]" value="atestado_medico">
+                        <span>Atestado médico</span>
+                    </label>
+                </div>
+                <small class="hint">
+                    (Por enquanto essa informação é apenas visual. Depois podemos salvar isso em campos próprios
+                    para gerar relatórios de documentos pendentes.)
+                </small>
             </div>
 
-            <div class="form-group">
-                <label for="validade_atestado">Validade do atestado médico</label>
-                <input type="date" id="validade_atestado" name="validade_atestado"
-                       class="form-control"
-                       value="{{ atleta.validade_atestado if atleta }}">
-            </div>
-
-            <!-- Responsável -->
-            <div class="form-group form-group-full">
-                <hr>
-                <strong>Responsável</strong>
-            </div>
-
-            <div class="form-group">
-                <label for="responsavel_nome">Nome do responsável</label>
-                <input type="text" id="responsavel_nome" name="responsavel_nome" class="form-control"
-                       value="{{ atleta.responsavel_nome if atleta }}">
-            </div>
-
-            <div class="form-group">
-                <label for="responsavel_cpf">CPF do responsável</label>
-                <input type="text" id="responsavel_cpf" name="responsavel_cpf" class="form-control"
-                       value="{{ atleta.responsavel_cpf if atleta }}">
-            </div>
-
-            <div class="form-group">
-                <label for="responsavel_telefone">Telefone do responsável</label>
-                <input type="text" id="responsavel_telefone" name="responsavel_telefone" class="form-control"
-                       value="{{ atleta.responsavel_telefone if atleta }}">
-            </div>
-
-            <!-- Plano -->
-            <div class="form-group form-group-full">
-                <hr>
-                <strong>Plano e grupos</strong>
-            </div>
-
-            <div class="form-group">
-                <label for="plano_id">Plano</label>
-                <select id="plano_id" name="plano_id" class="form-control">
-                    <option value="">Nenhum</option>
-                    {% for p in planos %}
-                        {% set selected = false %}
-                        {% if plano_id_atual is defined and plano_id_atual == p.id %}
-                            {% set selected = true %}
-                        {% endif %}
-                        <option value="{{ p.id }}"
-                            {% if selected %}selected{% endif %}>
-                            {{ p.nome }} — R$ {{ '%.2f'|format(p.valor_mensal) }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-
+            <!-- Grupos -->
             <div class="form-group form-group-full">
                 <label>Grupos do atleta</label>
-                {% for g in grupos %}
-                    <label class="checkbox-inline">
-                        <input type="checkbox" name="grupos_ids"
-                               value="{{ g.id }}"
-                               {% if grupos_ids_atuais is defined and g.id in grupos_ids_atuais %}checked{% endif %}>
-                        {{ g.nome }}
-                    </label><br>
+                {% if grupos %}
+                    <div class="chips-grid">
+                        {% for g in grupos %}
+                            <label class="chip-checkbox">
+                                <input type="checkbox" name="grupo_ids" value="{{ g.id }}"
+                                       {% if g.id in grupos_do_atleta %}checked{% endif %}>
+                                <span>{{ g.nome }}</span>
+                            </label>
+                        {% endfor %}
+                    </div>
                 {% else %}
                     <p class="empty-state">Nenhum grupo cadastrado ainda.</p>
-                {% endfor %}
+                {% endif %}
+            </div>
+
+            <!-- Informações adicionais -->
+            <div class="form-group form-group-full">
+                <label for="informacoes_adicionais">Informações adicionais</label>
+                <textarea id="informacoes_adicionais" name="informacoes_adicionais"
+                          rows="3" class="form-control"
+                          placeholder="Observações médicas, restrições, observações gerais...">{{ atleta.informacoes_adicionais if atleta }}</textarea>
+            </div>
+
+            <!-- Câmera -->
+            <div class="form-group form-group-full">
+                <label>Foto do atleta</label>
+                <div class="camera-wrapper">
+                    <video id="video" autoplay playsinline></video>
+                    <canvas id="canvas" class="camera-preview"></canvas>
+                    <input type="hidden" id="foto_base64" name="foto_base64">
+                    <button type="button" id="capture" class="btn btn-outline btn-sm">
+                        Capturar foto
+                    </button>
+                </div>
+                <small class="hint">No celular, use a câmera traseira para melhor qualidade.</small>
             </div>
 
             <div class="form-actions">
@@ -222,51 +167,4 @@
         </form>
     </div>
 </div>
-
-<script>
-    // Habilita campo RG ou CPF conforme seleção
-    const tipoDoc = document.getElementById('tipo_doc');
-    const rgInput = document.getElementById('rg');
-    const cpfInput = document.getElementById('cpf');
-
-    function atualizarDoc() {
-        if (!tipoDoc) return;
-        const v = tipoDoc.value;
-        if (v === 'RG') {
-            rgInput.disabled = false;
-            cpfInput.disabled = true;
-        } else if (v === 'CPF') {
-            rgInput.disabled = true;
-            cpfInput.disabled = false;
-        } else {
-            rgInput.disabled = true;
-            cpfInput.disabled = true;
-        }
-    }
-
-    if (tipoDoc) {
-        tipoDoc.addEventListener('change', atualizarDoc);
-        atualizarDoc();
-    }
-
-    // Busca CEP na API ViaCEP
-    const cepInput = document.getElementById('cep');
-    if (cepInput) {
-        cepInput.addEventListener('blur', function () {
-            const cep = cepInput.value.replace(/\D/g, '');
-            if (cep.length !== 8) return;
-
-            fetch(`https://viacep.com.br/ws/${cep}/json/`)
-                .then(r => r.json())
-                .then(data => {
-                    if (data.erro) return;
-                    document.getElementById('logradouro').value = data.logradouro || '';
-                    document.getElementById('bairro').value = data.bairro || '';
-                    document.getElementById('cidade').value = data.localidade || '';
-                    document.getElementById('estado').value = data.uf || '';
-                })
-                .catch(e => console.error(e));
-        });
-    }
-</script>
 {% endblock %}

@@ -40,49 +40,26 @@ class Atleta(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(150), nullable=False)
-    data_nascimento = db.Column(db.Date, nullable=False)
 
-    # Campos de documento pessoais
+    # campos novos / alinhados com o banco
     rg = db.Column(db.String(20))
     cpf = db.Column(db.String(14))
 
+    data_nascimento = db.Column(db.Date, nullable=False)
     posicao = db.Column(db.String(50))
 
-    # campo antigo genérico que já existia
+    # legado – vamos manter pra não quebrar nada que ainda use
     documento = db.Column(db.String(50))
-
-    # Telefones
     telefone_residencial = db.Column(db.String(30))
-    telefone = db.Column(db.String(30))
 
+    telefone = db.Column(db.String(30))  # telefone principal
     status = db.Column(db.Enum('ATIVO', 'INATIVO'), default='ATIVO')
+
     criado_em = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # Endereço (vamos criar via SQL)
-    cep = db.Column(db.String(9))
-    logradouro = db.Column(db.String(150))
-    numero = db.Column(db.String(10))
-    complemento = db.Column(db.String(80))
-    bairro = db.Column(db.String(80))
-    cidade = db.Column(db.String(80))
-    estado = db.Column(db.String(2))
-
-    # Médico / docs
     validade_atestado = db.Column(db.Date)
     informacoes_adicionais = db.Column(db.String(255))
 
-    doc_rg_ok = db.Column(db.Boolean, default=False)
-    doc_cpf_ok = db.Column(db.Boolean, default=False)
-    doc_comprov_endereco_ok = db.Column(db.Boolean, default=False)
-    doc_decl_escolar_ok = db.Column(db.Boolean, default=False)
-    doc_atestado_medico_ok = db.Column(db.Boolean, default=False)
-
-    # Dados do responsável atrelados direto ao atleta
-    responsavel_nome = db.Column(db.String(150))
-    responsavel_cpf = db.Column(db.String(14))
-    responsavel_telefone = db.Column(db.String(30))
-
-    # Relacionamentos que já existiam
     fotos = db.relationship("AtletaFoto", backref="atleta", lazy=True)
     responsaveis = db.relationship("AtletaResponsavel", back_populates="atleta")
     grupos = db.relationship("AtletaGrupo", back_populates="atleta")
