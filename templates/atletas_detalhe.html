@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Atleta · {{ atleta.nome }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">{{ atleta.nome }}</h1>
+        <p class="page-subtitle">Ficha completa do atleta.</p>
+    </div>
+    <a href="{{ url_for('atletas.editar', atleta_id=atleta.id) }}" class="btn btn-primary">Editar atleta</a>
+</div>
+
+<div class="card">
+    <div class="card-body form-grid">
+        <div class="form-group">
+            <label>Data de nascimento</label>
+            <div>{{ atleta.data_nascimento }}</div>
+        </div>
+        <div class="form-group">
+            <label>Posição</label>
+            <div>{{ atleta.posicao or '-' }}</div>
+        </div>
+        <div class="form-group">
+            <label>Status</label>
+            <div>{{ atleta.status }}</div>
+        </div>
+
+        <div class="form-group">
+            <label>RG</label>
+            <div>{{ atleta.rg or '-' }}</div>
+        </div>
+        <div class="form-group">
+            <label>CPF</label>
+            <div>{{ atleta.cpf or '-' }}</div>
+        </div>
+
+        <div class="form-group">
+            <label>Endereço</label>
+            <div>
+                {{ atleta.logradouro or '' }} {{ atleta.numero or '' }}<br>
+                {{ atleta.bairro or '' }} - {{ atleta.cidade or '' }}/{{ atleta.estado or '' }}<br>
+                CEP {{ atleta.cep or '-' }}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Validade do atestado</label>
+            <div>{{ atleta.validade_atestado or '-' }}</div>
+        </div>
+
+        <div class="form-group">
+            <label>Responsável</label>
+            <div>
+                {{ atleta.responsavel_nome or '-' }}<br>
+                CPF: {{ atleta.responsavel_cpf or '-' }}<br>
+                Tel: {{ atleta.responsavel_telefone or '-' }}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Plano</label>
+            <div>{{ plano_ativo.nome if plano_ativo else '-' }}</div>
+        </div>
+
+        <div class="form-group form-group-full">
+            <label>Grupos</label>
+            <div>
+                {% if grupos %}
+                    {% for g in grupos %}
+                        <span class="badge badge-success">{{ g.nome }}</span>
+                    {% endfor %}
+                {% else %}
+                    <span class="badge badge-muted">Sem grupos</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

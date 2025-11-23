@@ -25,6 +25,7 @@ body {
     padding: 0.75rem 2.5rem;
     background: linear-gradient(to right, #050813, #090e1b);
     border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    gap: 1rem;
 }
 
 .navbar-brand {
@@ -138,21 +139,6 @@ body {
     background: rgba(255, 255, 255, 0.06);
 }
 
-.btn-secondary {
-    background: rgba(255, 255, 255, 0.05);
-    color: #e1e3ee;
-    border-color: rgba(255, 255, 255, 0.12);
-}
-
-.btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.12);
-}
-
-.btn-sm {
-    padding: 0.25rem 0.7rem;
-    font-size: 0.78rem;
-}
-
 /* ---------- LAYOUT PRINCIPAL ---------- */
 .main-container {
     max-width: 1200px;
@@ -194,24 +180,6 @@ body {
     padding: 1.25rem 1.4rem;
 }
 
-.card-title-sm {
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 0.4rem;
-}
-
-.card-text-sm {
-    font-size: 0.9rem;
-    color: #c5c7d8;
-}
-
-.card-list {
-    margin-top: 0.5rem;
-    padding-left: 1.2rem;
-    font-size: 0.9rem;
-    color: #c5c7d8;
-}
-
 /* ---------- DASHBOARD STATS ---------- */
 .stats-grid {
     display: grid;
@@ -219,23 +187,11 @@ body {
     gap: 1rem;
 }
 
-.stat-card-link {
-    text-decoration: none;
-    color: inherit;
-}
-
 .stat-card {
     padding: 1rem 1.1rem;
     border-radius: 16px;
     background: linear-gradient(145deg, rgba(10, 14, 32, 0.96), rgba(18, 30, 56, 0.96));
     border: 1px solid rgba(255, 255, 255, 0.04);
-    transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
-}
-
-.stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
-    border-color: rgba(255, 180, 90, 0.6);
 }
 
 .stat-label {
@@ -255,37 +211,6 @@ body {
     margin-top: 0.4rem;
     font-size: 0.75rem;
     color: #ffb347;
-}
-
-.stat-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 999px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.9rem;
-    margin-bottom: 0.4rem;
-}
-
-.stat-icon-green {
-    background: rgba(0, 200, 140, 0.16);
-    color: #3ae6b3;
-}
-
-.stat-icon-red {
-    background: rgba(255, 82, 82, 0.16);
-    color: #ff6a6a;
-}
-
-.stat-icon-amber {
-    background: rgba(255, 184, 0, 0.16);
-    color: #ffd15a;
-}
-
-.stat-icon-blue {
-    background: rgba(86, 144, 255, 0.16);
-    color: #7fa3ff;
 }
 
 /* ---------- TABELAS ---------- */
@@ -323,14 +248,6 @@ body {
     background-color: rgba(255, 255, 255, 0.03);
 }
 
-/* Header de tabela / badge de filtro */
-.table-header-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.8rem;
-}
-
 /* ---------- BADGES ---------- */
 .badge {
     display: inline-block;
@@ -349,11 +266,6 @@ body {
 .badge-muted {
     background: rgba(160, 164, 187, 0.16);
     color: #cfd2e2;
-}
-
-.badge-warning {
-    background: rgba(255, 184, 0, 0.16);
-    color: #ffd15a;
 }
 
 /* ---------- FORMULÁRIOS ---------- */
@@ -413,51 +325,44 @@ textarea:focus {
     color: #c4c7dd;
 }
 
-/* Barra de filtros */
-.filter-bar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem 1rem;
-    align-items: flex-end;
-}
-
-.form-group.inline {
-    max-width: 220px;
-}
-
-/* ---------- K P I S (financeiro) ---------- */
-.kpis {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-    gap: 1rem;
-    margin-bottom: 0.5rem;
-}
-
-.kpi-card {
-    padding: 0.9rem 1rem;
-    border-radius: 16px;
-    background: linear-gradient(145deg, rgba(10, 14, 32, 0.9), rgba(18, 26, 54, 0.9));
-    border: 1px solid rgba(255, 255, 255, 0.04);
-}
-
-.kpi-label {
-    font-size: 0.78rem;
-    color: #a7aac2;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-bottom: 0.3rem;
-}
-
-.kpi-value {
-    font-size: 1.3rem;
-    font-weight: 600;
-}
-
 /* ---------- ESTADOS VAZIOS ---------- */
 .empty-state {
     padding: 1.2rem 0.5rem;
     font-size: 0.9rem;
     color: #a3a7c0;
+}
+
+/* ---------- CÂMERA / FOTO ATLETA ---------- */
+.camera-wrapper {
+    margin-top: 0.75rem;
+    border-radius: 16px;
+    border: 1px dashed rgba(255, 255, 255, 0.18);
+    padding: 0.75rem;
+    display: flex;
+    justify-content: center;
+    background: rgba(4, 7, 18, 0.8);
+}
+
+.camera-video {
+    width: 100%;
+    max-width: 320px;
+    border-radius: 12px;
+}
+
+.camera-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.athlete-photo-preview {
+    width: 120px;
+    height: 120px;
+    border-radius: 999px;
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.18);
+    margin-bottom: 0.75rem;
 }
 
 /* ---------- FOOTER ---------- */
@@ -468,252 +373,216 @@ textarea:focus {
     color: #6c718f;
 }
 
-/* ---------- UTILIDADES ---------- */
-.mt-1 { margin-top: 0.5rem; }
-.mt-2 { margin-top: 1rem; }
-
-/* ---------- LOGIN / AUTH ---------- */
+/* ---------- LOGIN (página separada) ---------- */
 .login-body {
-    min-height: 100vh;
-    background: radial-gradient(circle at top, #20293f 0, #050813 45%, #020308 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    background: radial-gradient(circle at top left, #1c2333 0, #050813 45%, #020308 100%);
     color: #f5f7ff;
 }
 
 .login-wrapper {
-    max-width: 420px;
-    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     padding: 1.5rem;
 }
 
 .login-card {
-    background: rgba(5, 9, 22, 0.96);
-    border-radius: 20px;
-    padding: 1.8rem 1.7rem;
-    border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.brand-logo-lg {
-    width: 56px;
-    height: 56px;
-    border-radius: 999px;
-    background: radial-gradient(circle at 30% 30%, #ffb347, #ff7a00);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.6rem;
-}
-
-.auth-wrapper {
-    display: flex;
-    justify-content: center;
-    margin-top: 1.5rem;
-}
-
-.auth-card {
-    max-width: 480px;
+    max-width: 420px;
     width: 100%;
-    background: rgba(5, 9, 22, 0.96);
-    border-radius: 20px;
-    padding: 1.8rem 1.7rem;
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 18px;
+    background: rgba(10, 14, 32, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.auth-title {
-    font-size: 1.4rem;
-    margin-bottom: 0.4rem;
+/* ---------- RESPONSIVIDADE ---------- */
+
+/* Tablets e telas médias */
+@media (max-width: 992px) {
+    .navbar {
+        padding: 0.75rem 1.25rem;
+    }
+
+    .navbar-nav {
+        gap: 0.75rem;
+    }
+
+    .main-container {
+        margin: 1.25rem auto 2rem;
+        padding: 0 1rem;
+    }
+
+    .card-body {
+        padding: 1rem 1.1rem;
+    }
 }
 
-.auth-subtitle {
-    font-size: 0.9rem;
-    color: #b4b7cc;
-    margin-bottom: 1rem;
+/* Celulares (layout principal) */
+@media (max-width: 768px) {
+    body {
+        font-size: 14px;
+    }
+
+    .navbar {
+        flex-wrap: wrap;
+        padding: 0.75rem 1rem;
+    }
+
+    .navbar-brand {
+        font-size: 1rem;
+    }
+
+    .navbar-nav {
+        width: 100%;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        row-gap: 0.3rem;
+        font-size: 0.82rem;
+    }
+
+    .navbar-user {
+        width: 100%;
+        justify-content: flex-end;
+        font-size: 0.8rem;
+    }
+
+    .main-container {
+        max-width: 100%;
+        margin: 1rem auto 1.5rem;
+        padding: 0 1rem;
+    }
+
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.4rem;
+        margin-bottom: 1rem;
+    }
+
+    .page-title {
+        font-size: 1.4rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .card {
+        border-radius: 14px;
+    }
+
+    .card-body {
+        padding: 0.9rem 1rem;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    /* Tabelas com scroll horizontal */
+    .table {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .table thead,
+    .table tbody,
+    .table th,
+    .table td,
+    .table tr {
+        white-space: nowrap;
+    }
+
+    /* Botões mais fáceis de clicar */
+    .btn {
+        padding: 0.55rem 1rem;
+    }
+
+    .camera-actions {
+        flex-direction: row;
+        justify-content: flex-start;
+    }
 }
 
-.auth-form .form-group {
-    margin-bottom: 0.75rem;
+/* Celulares pequenos */
+@media (max-width: 480px) {
+    .navbar {
+        padding-inline: 0.75rem;
+    }
+
+    .navbar-nav {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.2rem;
+    }
+
+    .navbar-user {
+        justify-content: flex-start;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .btn,
+    .btn-primary,
+    .btn-outline {
+        width: 100%;
+    }
+
+    .login-card {
+        max-width: 100%;
+    }
+
+    .camera-wrapper {
+        padding: 0.5rem;
+    }
 }
 
-.btn-full {
-    width: 100%;
-}
-
-.auth-links {
-    margin-top: 0.8rem;
-    font-size: 0.85rem;
-}
-
-.auth-links a {
-    color: #ffb347;
+/* Cards clicáveis na dashboard */
+.stat-card-link {
     text-decoration: none;
+    color: inherit;
+    display: block;
 }
 
-.auth-links a:hover {
-    text-decoration: underline;
+.stat-card-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
 }
 
-/* ---------- FLASH MESSAGES ---------- */
-.flash-container {
-    margin-bottom: 1rem;
-}
-
-.alert {
-    border-radius: 10px;
-    padding: 0.6rem 0.8rem;
-    font-size: 0.85rem;
-}
-
-/* ---------- FILTER BAR ---------- */
-.filter-bar {
+/* Header com filtros na listagem */
+.page-header-actions {
     display: flex;
+    gap: 0.75rem;
+    align-items: center;
     flex-wrap: wrap;
-    gap: 0.75rem 1rem;
-    align-items: flex-end;
 }
 
-.form-group.inline {
-    min-width: 180px;
-}
-
-/* ---------- CALENDÁRIO ---------- */
-.calendar-header {
+.filter-form {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.75rem;
-}
-
-.calendar-title {
-    font-weight: 600;
-    font-size: 1.1rem;
-}
-
-.calendar-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 0.25rem;
-    font-size: 0.85rem;
-}
-
-.calendar-weekday {
-    text-align: center;
-    padding: 0.4rem 0;
-    font-weight: 600;
-    color: #c4c7dd;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.calendar-cell {
-    min-height: 90px;
-    border-radius: 12px;
-    padding: 0.35rem 0.4rem;
-    background: rgba(6, 10, 25, 0.9);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
-}
-
-.calendar-cell.empty {
-    background: transparent;
-    border: none;
-}
-
-.calendar-day-number {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #ffb347;
-}
-
-.calendar-event {
-    margin-top: 0.15rem;
-    padding: 0.25rem 0.3rem;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.03);
-}
-
-.calendar-event-time {
-    font-size: 0.7rem;
-    color: #cfd2e2;
-}
-
-.calendar-event-title {
-    font-size: 0.8rem;
-    font-weight: 500;
-}
-
-.calendar-event-meta {
-    font-size: 0.7rem;
-    color: #9ea2c0;
-}
-
-.calendar-event-link {
-    display: inline-block;
-    margin-top: 0.15rem;
-    font-size: 0.7rem;
-    text-decoration: none;
-    color: #ffb347;
-}
-
-/* ---------- CAMERA ---------- */
-.camera-wrapper {
-    border-radius: 14px;
-    border: 1px dashed rgba(255, 255, 255, 0.25);
-    padding: 0.75rem;
-    display: flex;
-    flex-direction: column;
     gap: 0.5rem;
+    flex-wrap: wrap;
 }
 
-.camera-wrapper video {
-    width: 100%;
-    max-width: 360px;
-    border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.15);
+.filter-form input,
+.filter-form select {
+    min-width: 110px;
 }
-
-.camera-actions {
-    margin-top: 0.25rem;
+.link-table {
+    color: #f5f7ff;
+    text-decoration: none;
 }
-
-.camera-hint {
-    font-size: 0.75rem;
-    color: #a3a7c0;
-}
-
-/* RADIO INLINE (CPF/RG) */
-.radio-group-inline {
-    display: inline-flex;
-    gap: 0.8rem;
-    font-size: 0.85rem;
-}
-
-/* KPIs FINANCEIRO */
-.kpis {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 0.8rem;
-  margin: 0.5rem 0 1rem;
-}
-
-.kpi {
-  background: linear-gradient(145deg, rgba(10, 14, 32, 0.96), rgba(24, 34, 66, 0.96));
-  border-radius: 14px;
-  padding: 0.7rem 0.9rem;
-  border: 1px solid rgba(255, 255, 255, 0.04);
-}
-
-.kpi .t {
-  font-size: 0.75rem;
-  color: #9ea2c0;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.kpi .v {
-  margin-top: 0.2rem;
-  font-size: 1.15rem;
-  font-weight: 600;
+.link-table:hover {
+    text-decoration: underline;
 }
