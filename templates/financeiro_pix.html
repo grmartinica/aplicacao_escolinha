@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Pagamento Pix · Financeiro{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Pagamento Pix</h1>
+        <p class="page-subtitle">
+            QR Code gerado via Mercado Pago para a cobrança selecionada.
+        </p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body" style="text-align:center;">
+        <p>
+            Aluno: <strong>{{ conta.atleta.nome if conta.atleta else '—' }}</strong><br>
+            Valor: <strong>R$ {{ '%.2f'|format(conta.valor or 0) }}</strong><br>
+            Vencimento:
+            {% if conta.vencimento %}
+                <strong>{{ conta.vencimento.strftime('%d/%m/%Y') }}</strong>
+            {% else %}
+                —
+            {% endif %}
+        </p>
+
+        {% if qr_base64 %}
+            <p>Escaneie o QR Code pelo aplicativo do seu banco:</p>
+            <img src="data:image/png;base64,{{ qr_base64 }}" alt="QR Code Pix"
+                 style="max-width:260px; border-radius:1rem; border:1px solid rgba(148,163,184,0.5);">
+        {% endif %}
+
+        {% if ticket_url %}
+            <p style="margin-top:1rem;">
+                Ou acesse o link abaixo para visualizar os detalhes do pagamento:
+            </p>
+            <p>
+                <a href="{{ ticket_url }}" target="_blank" class="btn btn-primary">
+                    Abrir página do pagamento
+                </a>
+            </p>
+        {% endif %}
+
+        <p style="margin-top:1rem;">
+            <a href="{{ url_for('financeiro.resumo') }}" class="btn btn-outline">
+                Voltar para o financeiro
+            </a>
+        </p>
+    </div>
+</div>
+{% endblock %}

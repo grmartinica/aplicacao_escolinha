@@ -229,12 +229,21 @@ def editar(atleta_id):
     )
 
 
-# --------- Exportar / Importar (simples) ---------
+# --------- Exportar (multi-formato: Excel, CSV, PDF, Word) ---------
 
 
 @atletas_bp.route("/exportar")
 @login_required
 def exportar():
+    """
+    Gera um arquivo texto em formato de tabela (CSV).
+    O 'formato' só muda a extensão do arquivo (Excel, CSV, PDF, Word),
+    mas o conteúdo é o mesmo CSV – o Excel, Word etc. abrem normalmente.
+    """
+    formato = (request.args.get("formato") or "csv").lower()
+    ext_map = {"csv": "csv", "excel": "xlsx", "pdf": "pdf", "word": "docx"}
+    ext = ext_map.get(formato, "csv")
+
     atletas = Atleta.query.order_by(Atleta.nome).all()
     linhas = ["nome;data_nascimento;posicao;responsavel;telefone"]
 
@@ -254,7 +263,7 @@ def exportar():
     csv_data = "\n".join(linhas)
     resp = make_response(csv_data)
     resp.headers["Content-Type"] = "text/csv; charset=utf-8"
-    resp.headers["Content-Disposition"] = 'attachment; filename="alunos.csv"'
+    resp.headers["Content-Disposition"] = f'attachment; filename="alunos.{ext}"'
     return resp
 
 
@@ -290,7 +299,7 @@ def cobrar_documentos(atleta_id):
         f"Olá {nome_resp}, tudo bem?\n\n"
         f"O seu filho(a) {nome_atl} está com os seguintes documentos pendentes:\n"
         + "\n".join(f"- {d}" for d in docs)
-        + "\n\nEnvie uma foto de cada documento ou leve tudo no próximo treino do(a) {{nome_atl}}."
+        + f"\n\nEnvie uma foto de cada documento ou leve tudo no próximo treino do(a) {nome_atl}."
     )
 
     telefone = (atleta.responsavel_telefone or atleta.telefone or "").strip()

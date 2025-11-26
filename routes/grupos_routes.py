@@ -1,84 +1,116 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
-from flask_login import login_required
+from flask import Blueprint, render_template, request, redirect, url_for, flash, make_response
+from flask_login import login_required, current_user
 from extensions import db
-from models import Grupo, Atleta, AtletaGrupo
-from datetime import date
+from models import Grupo
 
-grupos_bp = Blueprint('grupos', __name__, url_prefix='/grupos')
+grupos_bp = Blueprint("grupos", __name__, url_prefix="/grupos")
 
 
-@grupos_bp.route('/')
+def _require_staff():
+    return current_user.role in ("ADMIN", "COACH", "SUPER_ADMIN")
+
+
+@grupos_bp.route("/listar")
 @login_required
 def listar():
-    grupos = Grupo.query.all()
-    return render_template('grupos_listar.html', grupos=grupos)
+    if not _require_staff():
+        flash("Você não tem permissão para acessar os grupos.", "danger")
+        return redirect(url_for("dashboard.index"))
+
+    grupos = Grupo.query.order_by(Grupo.nome).all()
+    return render_template("grupos_listar.html", grupos=grupos)
 
 
-@grupos_bp.route('/novo', methods=['GET', 'POST'])
+@grupos_bp.route("/novo", methods=["GET", "POST"])
 @login_required
 def novo():
-    if request.method == 'POST':
-        nome = request.form.get('nome')
-        min_idade = request.form.get('faixa_etaria_min', type=int)
-        max_idade = request.form.get('faixa_etaria_max', type=int)
+    if not _require_staff():
+        flash("Você não tem permissão para criar grupos.", "danger")
+        return redirect(url_for("dashboard.index"))
+
+    if request.method == "POST":
+        nome = (request.form.get("nome") or "").strip()
+        faixa_min = request.form.get("faixa_etaria_min") or None
+        faixa_max = request.form.get("faixa_etaria_max") or None
+        descricao = (request.form.get("descricao") or "").strip()
 
         if not nome:
-            flash('Informe o nome do grupo.', 'danger')
-            return redirect(url_for('grupos.novo'))
+            flash("Informe o nome do grupo.", "danger")
+            return redirect(url_for("grupos.novo"))
 
         grupo = Grupo(
             nome=nome,
-            faixa_etaria_min=min_idade,
-            faixa_etaria_max=max_idade
+            faixa_etaria_min=int(faixa_min) if faixa_min else None,
+            faixa_etaria_max=int(faixa_max) if faixa_max else None,
+            descricao=descricao,
         )
         db.session.add(grupo)
         db.session.commit()
-        flash('Grupo criado com sucesso!', 'success')
-        return redirect(url_for('grupos.listar'))
 
-    return render_template('grupos_novo.html')
+        flash("Grupo criado com sucesso.", "success")
+        return redirect(url_for("grupos.listar"))
+
+    return render_template("grupos_form.html", grupo=None)
 
 
-@grupos_bp.route('/<int:grupo_id>/gerenciar', methods=['GET', 'POST'])
+@grupos_bp.route("/<int:grupo_id>/editar", methods=["GET", "POST"])
 @login_required
-def gerenciar(grupo_id):
+def editar(grupo_id):
+    if not _require_staff():
+        flash("Você não tem permissão para editar grupos.", "danger")
+        return redirect(url_for("dashboard.index"))
+
     grupo = Grupo.query.get_or_404(grupo_id)
 
-    if request.method == 'POST':
-        # adicionar/remover atletas via checkboxes
-        atletas_ids = request.form.getlist('atletas_ids')
-        # zera relações atuais
-        AtletaGrupo.query.filter_by(grupo_id=grupo.id).delete()
-        for aid in atletas_ids:
-            ag = AtletaGrupo(atleta_id=int(aid), grupo_id=grupo.id, ativo=True)
-            db.session.add(ag)
+    if request.method == "POST":
+        nome = (request.form.get("nome") or "").strip()
+        faixa_min = request.form.get("faixa_etaria_min") or None
+        faixa_max = request.form.get("faixa_etaria_max") or None
+        descricao = (request.form.get("descricao") or "").strip()
+
+        if not nome:
+            flash("Informe o nome do grupo.", "danger")
+            return redirect(url_for("grupos.editar", grupo_id=grupo.id))
+
+        grupo.nome = nome
+        grupo.faixa_etaria_min = int(faixa_min) if faixa_min else None
+        grupo.faixa_etaria_max = int(faixa_max) if faixa_max else None
+        grupo.descricao = descricao
+
         db.session.commit()
-        flash('Grupo atualizado com sucesso!', 'success')
-        return redirect(url_for('grupos.gerenciar', grupo_id=grupo.id))
+        flash("Grupo atualizado com sucesso.", "success")
+        return redirect(url_for("grupos.listar"))
 
-    # filtros
-    nome = (request.args.get('nome') or '').strip()
-    idade_min = request.args.get('idade_min', type=int)
-    idade_max = request.args.get('idade_max', type=int)
+    return render_template("grupos_form.html", grupo=grupo)
 
-    query = Atleta.query.filter_by(status='ATIVO')
 
-    hoje = date.today()
-    if idade_min is not None:
-        ano_max = hoje.year - idade_min
-        query = query.filter(Atleta.data_nascimento <= date(ano_max, 12, 31))
-    if idade_max is not None:
-        ano_min = hoje.year - idade_max
-        query = query.filter(Atleta.data_nascimento >= date(ano_min, 1, 1))
-    if nome:
-        query = query.filter(Atleta.nome.ilike(f'%{nome}%'))
+@grupos_bp.route("/exportar")
+@login_required
+def exportar():
+    if not _require_staff():
+        flash("Você não tem permissão para exportar grupos.", "danger")
+        return redirect(url_for("dashboard.index"))
 
-    atletas = query.order_by(Atleta.nome).all()
-    atletas_do_grupo = {ag.atleta_id for ag in grupo.atletas}
+    formato = (request.args.get("formato") or "csv").lower()
+    ext_map = {"csv": "csv", "excel": "xlsx", "pdf": "pdf", "word": "docx"}
+    ext = ext_map.get(formato, "csv")
 
-    return render_template(
-        'grupos_gerenciar.html',
-        grupo=grupo,
-        atletas=atletas,
-        atletas_do_grupo=atletas_do_grupo
-    )
+    grupos = Grupo.query.order_by(Grupo.nome).all()
+    linhas = ["nome;faixa_etaria_min;faixa_etaria_max;descricao"]
+
+    for g in grupos:
+        linha = ";".join(
+            [
+                g.nome or "",
+                str(g.faixa_etaria_min or ""),
+                str(g.faixa_etaria_max or ""),
+                (g.descricao or "").replace("\n", " "),
+            ]
+        )
+        linhas.append(linha)
+
+    csv_data = "\n".join(linhas)
+    resp = make_response(csv_data)
+    resp.headers["Content-Type"] = "text/csv; charset=utf-8"
+    resp.headers["Content-Disposition"] = f'attachment; filename="grupos.{ext}"'
+    return resp

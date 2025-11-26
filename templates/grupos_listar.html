@@ -1,13 +1,26 @@
 {% extends "base.html" %}
-{% block title %}Grupos{% endblock %}
+{% block title %}Grupos · Aurora Tech{% endblock %}
 
 {% block content %}
 <div class="page-header">
     <div>
         <h1 class="page-title">Grupos</h1>
-        <p class="page-subtitle">Categorias e turmas da escolinha.</p>
+        <p class="page-subtitle">
+            Organize turmas por idade para treinos e campeonatos.
+        </p>
     </div>
-    <a href="{{ url_for('grupos.novo') }}" class="btn btn-primary">+ Novo grupo</a>
+    <div class="page-header-actions">
+        <div class="btn-group">
+            <a href="{{ url_for('grupos.exportar', formato='excel') }}" class="btn btn-secondary">Excel</a>
+            <a href="{{ url_for('grupos.exportar', formato='csv') }}" class="btn btn-secondary">CSV</a>
+            <a href="{{ url_for('grupos.exportar', formato='pdf') }}" class="btn btn-secondary">PDF</a>
+            <a href="{{ url_for('grupos.exportar', formato='word') }}" class="btn btn-secondary">Word</a>
+        </div>
+
+        <a href="{{ url_for('grupos.novo') }}" class="btn btn-primary">
+            + Novo grupo
+        </a>
+    </div>
 </div>
 
 <div class="card">
@@ -18,36 +31,35 @@
             <tr>
                 <th>Nome</th>
                 <th>Faixa etária</th>
-                <th>Qtd. atletas</th>
                 <th>Descrição</th>
-                <th style="width:1%"></th>
+                <th>Ações</th>
             </tr>
             </thead>
             <tbody>
             {% for g in grupos %}
-                <tr>
-                    <td>{{ g.nome }}</td>
-                    <td>
-                        {% if g.faixa_etaria_min and g.faixa_etaria_max %}
-                            {{ g.faixa_etaria_min }} - {{ g.faixa_etaria_max }} anos
-                        {% else %}
-                            Livre
-                        {% endif %}
-                    </td>
-                    <td>{{ g.atletas|length }}</td>
-                    <td>{{ g.descricao or '-' }}</td>
-                    <td>
-                        <a href="{{ url_for('grupos.gerenciar', grupo_id=g.id) }}"
-                           class="btn btn-outline btn-sm">
-                            Gerenciar
-                        </a>
-                    </td>
-                </tr>
+            <tr>
+                <td>{{ g.nome }}</td>
+                <td>
+                    {% if g.faixa_etaria_min or g.faixa_etaria_max %}
+                        {{ g.faixa_etaria_min or '...' }} a {{ g.faixa_etaria_max or '...' }} anos
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+                <td>{{ g.descricao or '—' }}</td>
+                <td>
+                    <a href="{{ url_for('grupos.editar', grupo_id=g.id) }}" class="btn btn-sm btn-outline">
+                        Editar
+                    </a>
+                </td>
+            </tr>
             {% endfor %}
             </tbody>
         </table>
         {% else %}
-            <p class="empty-state">Nenhum grupo cadastrado ainda.</p>
+            <p class="empty-state">
+                Nenhum grupo cadastrado ainda.
+            </p>
         {% endif %}
     </div>
 </div>

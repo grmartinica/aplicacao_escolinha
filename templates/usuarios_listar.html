@@ -48,13 +48,10 @@
                         Editar
                     </a>
 
-                    <form method="post"
-                          action="{{ url_for('usuarios_sistema.reset_senha', usuario_id=u.id) }}"
-                          style="display:inline;">
-                        <button type="submit" class="btn btn-sm btn-secondary">
-                            Resetar senha
-                        </button>
-                    </form>
+                    <a href="{{ url_for('usuarios_sistema.reset_senha', usuario_id=u.id) }}"
+                       class="btn btn-sm btn-secondary">
+                        Resetar senha
+                    </a>
                 </td>
             </tr>
             {% endfor %}

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Nova despesa · Financeiro{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Nova despesa</h1>
+        <p class="page-subtitle">
+            Registre contas a pagar da escolinha.
+        </p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" class="form-grid">
+            <div class="form-group">
+                <label for="fornecedor">Fornecedor</label>
+                <input type="text" id="fornecedor" name="fornecedor" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="vencimento">Vencimento</label>
+                <input type="date" id="vencimento" name="vencimento" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="valor">Valor</label>
+                <input type="text" id="valor" name="valor" class="form-control" placeholder="0,00" required>
+            </div>
+
+            <div class="form-group form-group-full">
+                <label for="descricao">Descrição (opcional)</label>
+                <textarea id="descricao" name="descricao" rows="2" class="form-control"></textarea>
+            </div>
+
+            <div class="form-actions form-group-full">
+                <a href="{{ url_for('financeiro.resumo') }}" class="btn btn-outline">Cancelar</a>
+                <button type="submit" class="btn btn-primary">Salvar despesa</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

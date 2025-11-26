@@ -82,7 +82,6 @@ def editar(usuario_id):
             flash("Nome e e-mail são obrigatórios.", "danger")
             return redirect(url_for("usuarios_sistema.editar", usuario_id=usuario.id))
 
-        # não deixa um ADMIN comum alterar um SUPER_ADMIN
         if usuario.role == "SUPER_ADMIN" and current_user.role != "SUPER_ADMIN":
             flash("Apenas o SUPER_ADMIN pode alterar outro SUPER_ADMIN.", "danger")
             return redirect(url_for("usuarios_sistema.listar"))
@@ -100,7 +99,7 @@ def editar(usuario_id):
     return render_template("usuarios_form.html", usuario=usuario)
 
 
-@usuarios_bp.route("/<int:usuario_id>/reset-senha", methods=["POST"])
+@usuarios_bp.route("/<int:usuario_id>/reset-senha")
 @login_required
 def reset_senha(usuario_id):
     if not _require_admin():

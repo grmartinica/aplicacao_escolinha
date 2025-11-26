@@ -3,3 +3,4 @@ Flask-Login
 Flask-SQLAlchemy
 gunicorn
 pymysql
+mercadopago==2.2.0

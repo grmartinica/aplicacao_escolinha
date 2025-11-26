@@ -13,9 +13,23 @@
         <a href="{{ url_for('atletas.importar') }}" class="btn btn-secondary">
             Importar
         </a>
-        <a href="{{ url_for('atletas.exportar') }}" class="btn btn-secondary">
-            Exportar
-        </a>
+
+        <!-- Exportar: Excel, CSV, PDF, Word -->
+        <div class="btn-group">
+            <a href="{{ url_for('atletas.exportar', formato='excel') }}" class="btn btn-secondary">
+                Excel
+            </a>
+            <a href="{{ url_for('atletas.exportar', formato='csv') }}" class="btn btn-secondary">
+                CSV
+            </a>
+            <a href="{{ url_for('atletas.exportar', formato='pdf') }}" class="btn btn-secondary">
+                PDF
+            </a>
+            <a href="{{ url_for('atletas.exportar', formato='word') }}" class="btn btn-secondary">
+                Word
+            </a>
+        </div>
+
         <a href="{{ url_for('atletas.novo') }}" class="btn btn-primary">
             + Novo aluno
         </a>
@@ -72,13 +86,13 @@
                     </a>
 
                     <a href="{{ url_for('atletas.cobrar_documentos', atleta_id=a.id) }}"
-                       class="btn btn-sm btn-secondary">
+                       class="btn btn-sm btn-secondary" target="_blank">
                         Cobrar docs (WhatsApp)
                     </a>
 
                     {% if a.tem_pend_financeira %}
                     <a href="{{ url_for('financeiro.cobrar_whatsapp', atleta_id=a.id) }}"
-                       class="btn btn-sm btn-secondary">
+                       class="btn btn-sm btn-secondary" target="_blank">
                         Cobrança financeira
                     </a>
                     {% endif %}

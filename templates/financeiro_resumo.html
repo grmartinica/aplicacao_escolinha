@@ -6,8 +6,29 @@
     <div>
         <h1 class="page-title">Financeiro</h1>
         <p class="page-subtitle">
-            Acompanhe mensalidades pagas, pendentes e faça cobranças via WhatsApp.
+            Acompanhe mensalidades pagas, pendentes e faça cobranças via WhatsApp ou Pix.
         </p>
+    </div>
+    <div class="page-header-actions">
+        <!-- Exportar: Excel, CSV, PDF, Word -->
+        <div class="btn-group">
+            <a href="{{ url_for('financeiro.exportar', formato='excel') }}" class="btn btn-secondary">
+                Excel
+            </a>
+            <a href="{{ url_for('financeiro.exportar', formato='csv') }}" class="btn btn-secondary">
+                CSV
+            </a>
+            <a href="{{ url_for('financeiro.exportar', formato='pdf') }}" class="btn btn-secondary">
+                PDF
+            </a>
+            <a href="{{ url_for('financeiro.exportar', formato='word') }}" class="btn btn-secondary">
+                Word
+            </a>
+        </div>
+
+        <a href="{{ url_for('financeiro.nova_despesa') }}" class="btn btn-primary">
+            + Adicionar despesa
+        </a>
     </div>
 </div>
 
@@ -68,7 +89,8 @@
                 <th>Vencimento</th>
                 <th>Valor</th>
                 <th>Status</th>
-                <th>Ações</th>
+                <th>Pix</th>
+                <th>Cobrança</th>
             </tr>
             </thead>
             <tbody>
@@ -93,10 +115,20 @@
                     {% endif %}
                 </td>
                 <td>
+                    {% if c.status in ['PENDENTE', 'ATRASADO'] %}
+                        <a href="{{ url_for('financeiro.gerar_pix', conta_id=c.id) }}"
+                           class="btn btn-sm btn-outline">
+                            Gerar Pix
+                        </a>
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+                <td>
                     {% if c.atleta and c.status in ['PENDENTE', 'ATRASADO'] %}
                     <a href="{{ url_for('financeiro.cobrar_whatsapp', atleta_id=c.atleta.id) }}"
-                       class="btn btn-sm btn-secondary">
-                        Cobrar via WhatsApp
+                       class="btn btn-sm btn-secondary" target="_blank">
+                        WhatsApp
                     </a>
                     {% else %}
                         —

@@ -1,58 +1,81 @@
 {% extends "base.html" %}
-{% block title %}Agenda{% endblock %}
+{% block title %}Agenda de treinos · Aurora Tech{% endblock %}
 
 {% block content %}
 <div class="page-header">
     <div>
         <h1 class="page-title">Agenda</h1>
-        <p class="page-subtitle">Visualize os treinos e atividades organizados por dia.</p>
+        <p class="page-subtitle">
+            Visualize os treinos e atividades programadas por dia e grupo.
+        </p>
     </div>
-    <a class="btn btn-primary" href="{{ url_for('atividades.nova') }}">+ Nova atividade</a>
+    <div class="page-header-actions">
+        <a href="{{ url_for('atividades.nova') }}" class="btn btn-primary">
+            + Nova atividade
+        </a>
+    </div>
 </div>
 
-{% if atividades_por_dia %}
-    <div class="card">
-        <div class="card-body">
-            <div class="agenda-grid">
-                {% for dia, lista in atividades_por_dia.items() %}
-                    <div class="agenda-day">
-                        <div class="agenda-day-header">
-                            <div class="agenda-day-date">
-                                {{ dia.strftime('%d/%m') }}
-                            </div>
-                            <div class="agenda-day-weekday">
-                                {{ dia.strftime('%A')|capitalize }}
-                            </div>
-                        </div>
+{% set dias_semana = {
+    0: 'Segunda-feira',
+    1: 'Terça-feira',
+    2: 'Quarta-feira',
+    3: 'Quinta-feira',
+    4: 'Sexta-feira',
+    5: 'Sábado',
+    6: 'Domingo'
+} %}
 
-                        <div class="agenda-day-body">
-                            {% for a in lista %}
-                                <div class="agenda-item">
-                                    <div class="agenda-item-time">
-                                        {{ a.hora_inicio.strftime('%H:%M') if a.hora_inicio else '--:--' }}
-                                    </div>
-                                    <div class="agenda-item-info">
-                                        <div class="agenda-item-title">{{ a.titulo }}</div>
-                                        <div class="agenda-item-sub">
-                                            Grupo: {{ a.grupo.nome if a.grupo else '-' }}
-                                            {% if a.local %} · Local: {{ a.local }}{% endif %}
-                                        </div>
-                                        <div class="agenda-item-actions">
-                                            <a href="{{ url_for('atividades.presencas', atividade_id=a.id) }}"
-                                               class="btn btn-outline btn-sm">
-                                                Presenças
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                {% endfor %}
+<div class="card">
+    <div class="card-body">
+        {% if atividades %}
+        <div class="agenda-grid">
+            {% for a in atividades %}
+            <div class="agenda-card">
+                <div class="agenda-card-header">
+                    <span class="agenda-day">
+                        {{ dias_semana[a.data.weekday()] }}
+                    </span>
+                    <span class="agenda-date">
+                        {{ a.data.strftime('%d/%m/%Y') }}
+                    </span>
+                </div>
+                <div class="agenda-card-body">
+                    <h3 class="agenda-title">{{ a.titulo }}</h3>
+                    <p class="agenda-meta">
+                        <strong>Horário:</strong>
+                        {{ a.hora_inicio.strftime('%H:%M') if a.hora_inicio else '—' }}
+                        {% if a.hora_fim %}
+                            às {{ a.hora_fim.strftime('%H:%M') }}
+                        {% endif %}
+                        <br>
+                        <strong>Grupo:</strong> {{ a.grupo.nome if a.grupo else 'Geral' }}<br>
+                        <strong>Local:</strong> {{ a.local or 'A definir' }}
+                    </p>
+                    {% if a.descricao %}
+                    <p class="agenda-description">
+                        {{ a.descricao }}
+                    </p>
+                    {% endif %}
+                </div>
+                <div class="agenda-card-footer">
+                    <a href="{{ url_for('atividades.presencas', atividade_id=a.id) }}"
+                       class="btn btn-sm btn-outline">
+                        Lista de presença
+                    </a>
+                    <a href="{{ url_for('atividades.editar', atividade_id=a.id) }}"
+                       class="btn btn-sm btn-secondary">
+                        Editar
+                    </a>
+                </div>
             </div>
+            {% endfor %}
         </div>
+        {% else %}
+            <p class="empty-state">
+                Nenhuma atividade cadastrada na agenda.
+            </p>
+        {% endif %}
     </div>
-{% else %}
-    <p class="empty-state">Nenhuma atividade cadastrada ainda.</p>
-{% endif %}
+</div>
 {% endblock %}
