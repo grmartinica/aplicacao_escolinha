@@ -15,8 +15,8 @@
                 <div class="sidebar-logo-icon">AT</div>
                 <div class="sidebar-logo-text">
                     <span class="sidebar-logo-title">
-                        {% if current_user.is_authenticated and current_user.escolinha_nome %}
-                            {{ current_user.escolinha_nome }}
+                        {% if session.get('escolinha_nome') %}
+                            {{ session.get('escolinha_nome') }}
                         {% else %}
                             Aurora Tech · Escolinhas
                         {% endif %}
@@ -128,9 +128,9 @@
                 <div class="sidebar-user-status-pill">
                     ● Online
                 </div>
-                <form method="post" action="{{ url_for('auth.logout') }}" style="margin-top:0.35rem;">
-                    <button type="submit" class="btn btn-sm btn-outline">Sair</button>
-                </form>
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline" style="margin-top:0.35rem;">
+                    Sair
+                </a>
             </div>
         </div>
         {% endif %}

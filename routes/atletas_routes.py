@@ -1,4 +1,13 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
+from flask import (
+    Blueprint,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    flash,
+    current_app,
+    make_response,
+)
 from flask_login import login_required, current_user
 from extensions import db
 from models import Atleta, Grupo, AtletaGrupo, AtletaFoto, Responsavel, AtletaResponsavel
@@ -6,15 +15,12 @@ from datetime import datetime
 import os
 import base64
 from werkzeug.utils import secure_filename
+from urllib.parse import quote
 
 atletas_bp = Blueprint("atletas", __name__, url_prefix="/atletas")
 
 
 def salvar_foto_base64(foto_base64, atleta_id):
-    """
-    Recebe uma string base64 "data:image/jpeg;base64,...."
-    e salva em static/fotos_atletas/, criando um registro em AtletaFoto.
-    """
     if not foto_base64:
         return
 
@@ -45,12 +51,7 @@ def salvar_foto_base64(foto_base64, atleta_id):
 @atletas_bp.route("/listar")
 @login_required
 def listar():
-    """
-    - ADMIN / COACH / SUPER_ADMIN: vêem todos os atletas (depois filtramos por escolinha).
-    - PARENT: vê apenas os atletas vinculados a ele (filhos).
-    """
     if current_user.role == "PARENT":
-        # pega os atletas associados a este responsável
         links = (
             AtletaResponsavel.query.join(AtletaResponsavel.responsavel)
             .filter(Responsavel.usuario_id == current_user.id)
@@ -127,15 +128,13 @@ def novo():
         )
 
         db.session.add(atleta)
-        db.session.flush()  # precisa do id
+        db.session.flush()
 
-        # vincula grupos
         for gid in grupos_ids:
             if gid:
                 ag = AtletaGrupo(atleta_id=atleta.id, grupo_id=int(gid), ativo=True)
                 db.session.add(ag)
 
-        # salva foto se existir
         if foto_base64:
             salvar_foto_base64(foto_base64, atleta.id)
 
@@ -206,14 +205,12 @@ def editar(atleta_id):
         atleta.responsavel_parentesco = resp_parentesco
         atleta.status = status
 
-        # atualizar grupos
         AtletaGrupo.query.filter_by(atleta_id=atleta.id).delete()
         for gid in grupos_ids:
             if gid:
                 ag = AtletaGrupo(atleta_id=atleta.id, grupo_id=int(gid), ativo=True)
                 db.session.add(ag)
 
-        # nova foto (se enviada)
         if foto_base64:
             salvar_foto_base64(foto_base64, atleta.id)
 
@@ -221,7 +218,6 @@ def editar(atleta_id):
         flash("Dados do atleta atualizados!", "success")
         return redirect(url_for("atletas.listar"))
 
-    # pega última foto (se existir)
     foto_atual = atleta.fotos[-1].foto_path if atleta.fotos else None
 
     return render_template(
@@ -231,3 +227,78 @@ def editar(atleta_id):
         grupos_do_atleta=grupos_do_atleta,
         foto_atual=foto_atual,
     )
+
+
+# --------- Exportar / Importar (simples) ---------
+
+
+@atletas_bp.route("/exportar")
+@login_required
+def exportar():
+    atletas = Atleta.query.order_by(Atleta.nome).all()
+    linhas = ["nome;data_nascimento;posicao;responsavel;telefone"]
+
+    for a in atletas:
+        dn = a.data_nascimento.strftime("%d/%m/%Y") if a.data_nascimento else ""
+        linha = ";".join(
+            [
+                a.nome or "",
+                dn,
+                a.posicao or "",
+                a.responsavel_nome or "",
+                a.responsavel_telefone or a.telefone or "",
+            ]
+        )
+        linhas.append(linha)
+
+    csv_data = "\n".join(linhas)
+    resp = make_response(csv_data)
+    resp.headers["Content-Type"] = "text/csv; charset=utf-8"
+    resp.headers["Content-Disposition"] = 'attachment; filename="alunos.csv"'
+    return resp
+
+
+@atletas_bp.route("/importar", methods=["GET", "POST"])
+@login_required
+def importar():
+    if request.method == "POST":
+        flash("Importação em desenvolvimento. Em breve você poderá subir uma planilha com os alunos.", "info")
+        return redirect(url_for("atletas.importar"))
+
+    return render_template("atletas_importar.html")
+
+
+# --------- WhatsApp documentos pendentes ---------
+
+
+@atletas_bp.route("/cobrar-documentos/<int:atleta_id>")
+@login_required
+def cobrar_documentos(atleta_id):
+    atleta = Atleta.query.get_or_404(atleta_id)
+
+    nome_resp = atleta.responsavel_nome or "responsável"
+    nome_atl = atleta.nome
+
+    docs = [
+        "atestado de matrícula escolar",
+        "comprovante de residência",
+        "cópia do RG",
+        "atestado médico (validade de 1 ano)",
+    ]
+
+    msg = (
+        f"Olá {nome_resp}, tudo bem?\n\n"
+        f"O seu filho(a) {nome_atl} está com os seguintes documentos pendentes:\n"
+        + "\n".join(f"- {d}" for d in docs)
+        + "\n\nEnvie uma foto de cada documento ou leve tudo no próximo treino do(a) {{nome_atl}}."
+    )
+
+    telefone = (atleta.responsavel_telefone or atleta.telefone or "").strip()
+    telefone_digits = "".join(ch for ch in telefone if ch.isdigit())
+
+    if not telefone_digits:
+        flash("Não há telefone cadastrado para este responsável.", "danger")
+        return redirect(url_for("atletas.listar"))
+
+    url = f"https://wa.me/55{telefone_digits}?text={quote(msg)}"
+    return redirect(url)

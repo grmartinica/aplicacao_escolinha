@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% if atleta %}
-    {% set page_title = "Editar atleta" %}
+   {% set page_title = "Editar aluno" %}
 {% else %}
-    {% set page_title = "Novo atleta" %}
+   {% set page_title = "Novo aluno" %}
 {% endif %}
 {% block title %}{{ page_title }}{% endblock %}
 
@@ -10,154 +10,196 @@
 <div class="page-header">
     <div>
         <h1 class="page-title">{{ page_title }}</h1>
-        <p class="page-subtitle">Cadastre ou atualize os dados do atleta e do responsável.</p>
+        <p class="page-subtitle">
+            Cadastre ou atualize os dados do atleta, responsável, documentos e grupos.
+        </p>
     </div>
-    <a href="{{ url_for('atletas.listar') }}" class="btn btn-outline">Voltar</a>
 </div>
 
 <div class="card">
     <div class="card-body">
-        <form method="post" class="form-grid">
-            <!-- Dados do atleta -->
-            <div class="form-group">
-                <label for="nome">Nome completo *</label>
-                <input type="text" id="nome" name="nome" class="form-control"
-                       value="{{ atleta.nome if atleta }}" required>
-            </div>
+        <form method="post" class="form-grid" id="form-atleta">
+            <!-- Coluna 1: dados do atleta -->
+            <div class="form-section">
+                <h3 class="form-section-title">Dados do atleta</h3>
 
-            <div class="form-group">
-                <label for="data_nascimento">Data de nascimento *</label>
-                <input type="date" id="data_nascimento" name="data_nascimento" class="form-control"
-                       value="{{ atleta.data_nascimento if atleta }}" required>
-            </div>
-
-            <div class="form-group">
-                <label for="posicao">Posição</label>
-                <input type="text" id="posicao" name="posicao" class="form-control"
-                       placeholder="Goleiro, zagueiro, meia..."
-                       value="{{ atleta.posicao if atleta }}">
-            </div>
-
-            <div class="form-group">
-                <label>Documento</label>
-                <div style="display:flex; gap:0.5rem; align-items:center;">
-                    <select id="tipo_documento" class="form-control" style="max-width:120px;">
-                        <option value="rg">RG</option>
-                        <option value="cpf">CPF</option>
-                    </select>
-                    <input type="text" id="rg" name="rg" class="form-control"
-                           placeholder="RG"
-                           value="{{ atleta.rg if atleta }}">
-                    <input type="text" id="cpf" name="cpf" class="form-control"
-                           placeholder="CPF"
-                           value="{{ atleta.cpf if atleta }}" style="display:none;">
+                <div class="form-group">
+                    <label for="nome">Nome completo</label>
+                    <input type="text" id="nome" name="nome" class="form-control"
+                           value="{{ atleta.nome if atleta else '' }}" required>
                 </div>
-            </div>
 
-            <div class="form-group">
-                <label for="telefone">Telefone do responsável</label>
-                <input type="text" id="telefone" name="telefone" class="form-control"
-                       value="{{ atleta.telefone if atleta }}">
-            </div>
+                <div class="form-group">
+                    <label for="data_nascimento">Data de nascimento</label>
+                    <input type="date" id="data_nascimento" name="data_nascimento" class="form-control"
+                           value="{{ atleta.data_nascimento if atleta else '' }}" required>
+                </div>
 
-            <div class="form-group">
-                <label for="validade_atestado">Validade do atestado médico</label>
-                <input type="date" id="validade_atestado" name="validade_atestado" class="form-control"
-                       value="{{ atleta.validade_atestado if atleta }}">
-            </div>
+                <div class="form-group">
+                    <label for="posicao">Posição</label>
+                    <input type="text" id="posicao" name="posicao" class="form-control"
+                           placeholder="Goleiro, zagueiro, meio-campo..."
+                           value="{{ atleta.posicao if atleta else '' }}">
+                </div>
 
-            <div class="form-group form-group-full">
-                <label for="informacoes_adicionais">Informações adicionais</label>
-                <textarea id="informacoes_adicionais" name="informacoes_adicionais" rows="2"
-                          class="form-control">{{ atleta.informacoes_adicionais if atleta }}</textarea>
-            </div>
+                <div class="form-group">
+                    <label for="rg">RG</label>
+                    <input type="text" id="rg" name="rg" class="form-control"
+                           value="{{ atleta.rg if atleta else '' }}">
+                </div>
 
-            {% if atleta %}
-            <div class="form-group">
-                <label for="status">Status</label>
-                <select id="status" name="status" class="form-control">
-                    <option value="ATIVO" {% if atleta.status == 'ATIVO' %}selected{% endif %}>Ativo</option>
-                    <option value="INATIVO" {% if atleta.status == 'INATIVO' %}selected{% endif %}>Inativo</option>
-                </select>
-            </div>
-            {% endif %}
+                <div class="form-group">
+                    <label for="cpf">CPF</label>
+                    <input type="text" id="cpf" name="cpf" class="form-control"
+                           value="{{ atleta.cpf if atleta else '' }}">
+                </div>
 
-            <!-- Dados do responsável -->
-            <div class="form-group form-group-full">
-                <h3 style="font-size:1rem; margin-top:0.75rem;">Responsável</h3>
-            </div>
+                <div class="form-group">
+                    <label for="telefone">Telefone do atleta (opcional)</label>
+                    <input type="text" id="telefone" name="telefone" class="form-control"
+                           value="{{ atleta.telefone if atleta else '' }}">
+                </div>
 
-            <div class="form-group">
-                <label for="responsavel_nome">Nome do responsável</label>
-                <input type="text" id="responsavel_nome" name="responsavel_nome" class="form-control"
-                       value="{{ atleta.responsavel_nome if atleta }}">
-            </div>
+                <div class="form-group">
+                    <label for="validade_atestado">Validade do atestado médico</label>
+                    <input type="date" id="validade_atestado" name="validade_atestado" class="form-control"
+                           value="{{ atleta.validade_atestado if atleta else '' }}">
+                </div>
 
-            <div class="form-group">
-                <label for="responsavel_parentesco">Parentesco</label>
-                <input type="text" id="responsavel_parentesco" name="responsavel_parentesco" class="form-control"
-                       placeholder="Pai, mãe, tio..."
-                       value="{{ atleta.responsavel_parentesco if atleta }}">
-            </div>
+                <div class="form-group form-group-full">
+                    <label for="informacoes_adicionais">Informações adicionais</label>
+                    <textarea id="informacoes_adicionais" name="informacoes_adicionais" rows="2"
+                              class="form-control">{{ atleta.informacoes_adicionais if atleta else '' }}</textarea>
+                </div>
 
-            <div class="form-group">
-                <label for="responsavel_cpf">CPF do responsável</label>
-                <input type="text" id="responsavel_cpf" name="responsavel_cpf" class="form-control"
-                       value="{{ atleta.responsavel_cpf if atleta }}">
-            </div>
-
-            <div class="form-group">
-                <label for="responsavel_telefone">Telefone do responsável</label>
-                <input type="text" id="responsavel_telefone" name="responsavel_telefone" class="form-control"
-                       value="{{ atleta.responsavel_telefone if atleta }}">
-            </div>
-
-            <!-- Grupos -->
-            <div class="form-group form-group-full">
-                <h3 style="font-size:1rem; margin-top:0.75rem;">Grupos do atleta</h3>
-                {% if grupos %}
-                    <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
-                        {% for g in grupos %}
-                            <label class="checkbox-inline">
-                                <input type="checkbox" name="grupos_ids"
-                                       value="{{ g.id }}"
-                                       {% if grupos_do_atleta and g.id in grupos_do_atleta %}checked{% endif %}>
-                                {{ g.nome }}
-                            </label>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <p class="empty-state">Nenhum grupo cadastrado ainda.</p>
+                {% if atleta %}
+                <div class="form-group">
+                    <label for="status">Status</label>
+                    <select id="status" name="status" class="form-control">
+                        <option value="ATIVO" {% if atleta.status == 'ATIVO' %}selected{% endif %}>Ativo</option>
+                        <option value="INATIVO" {% if atleta.status == 'INATIVO' %}selected{% endif %}>Inativo</option>
+                    </select>
+                </div>
                 {% endif %}
             </div>
 
-            <!-- Câmera / Foto -->
-            <div class="form-group form-group-full">
-                <h3 style="font-size:1rem; margin-top:0.75rem;">Foto do atleta</h3>
-                <div style="display:flex; flex-wrap:wrap; gap:1rem; align-items:flex-start;">
-                    <div>
-                        <video id="video" autoplay playsinline style="width: 320px; border-radius: 10px;"></video>
-                        <button type="button" id="capture" class="btn btn-primary" style="margin-top:0.5rem;">
-                            Tirar foto
-                        </button>
-                        <canvas id="canvas" style="display:none;"></canvas>
-                        <input type="hidden" id="foto_base64" name="foto_base64">
-                    </div>
+            <!-- Coluna 2: responsável + documentos -->
+            <div class="form-section">
+                <h3 class="form-section-title">Responsável</h3>
 
-                    {% if foto_atual %}
-                    <div>
-                        <p style="font-size:0.8rem; color:#a3a7c0;">Foto atual:</p>
-                        <img src="{{ url_for('static', filename=foto_atual) }}"
-                             alt="Foto atual do atleta"
-                             style="width: 160px; border-radius:10px; border:1px solid rgba(255,255,255,0.1);">
+                <div class="form-group">
+                    <label for="responsavel_nome">Nome do responsável</label>
+                    <input type="text" id="responsavel_nome" name="responsavel_nome" class="form-control"
+                           value="{{ atleta.responsavel_nome if atleta else '' }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="responsavel_parentesco">Grau de parentesco</label>
+                    <input type="text" id="responsavel_parentesco" name="responsavel_parentesco" class="form-control"
+                           placeholder="Pai, mãe, avô(ó), responsável legal..."
+                           value="{{ atleta.responsavel_parentesco if atleta else '' }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="responsavel_cpf">CPF do responsável</label>
+                    <input type="text" id="responsavel_cpf" name="responsavel_cpf" class="form-control"
+                           value="{{ atleta.responsavel_cpf if atleta else '' }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="responsavel_telefone">Telefone do responsável</label>
+                    <input type="text" id="responsavel_telefone" name="responsavel_telefone" class="form-control"
+                           value="{{ atleta.responsavel_telefone if atleta else '' }}">
+                </div>
+
+                <hr class="form-divider">
+
+                <h3 class="form-section-title">Documentos do atleta</h3>
+                <p class="helper-text">
+                    Marque os documentos que já foram conferidos pela coordenação.
+                </p>
+
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="doc_atestado_escolar">
+                        Atestado de matrícula escolar
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="doc_comprovante_residencia">
+                        Comprovante de residência
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="doc_copia_rg">
+                        Cópia do RG
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="doc_atestado_medico">
+                        Atestado médico (validade de 1 ano)
+                    </label>
+                </div>
+
+                <p class="helper-text">
+                    Esses checkboxes são, por enquanto, apenas controle visual. No futuro podemos
+                    integrar com um controle mais detalhado dos documentos no banco.
+                </p>
+            </div>
+
+            <!-- Coluna 3: foto + grupos -->
+            <div class="form-section">
+                <h3 class="form-section-title">Foto e grupos</h3>
+
+                <div class="form-group">
+                    <label>Foto do atleta</label>
+                    <div id="camera-container">
+                        <video id="camera" autoplay playsinline></video>
+                        <canvas id="snapshot" style="display:none;"></canvas>
                     </div>
+                    <div class="camera-actions">
+                        <button type="button" class="btn btn-sm btn-outline" onclick="startCamera()">Ligar câmera</button>
+                        <button type="button" class="btn btn-sm btn-primary" onclick="takePicture()">Tirar foto</button>
+                    </div>
+                    <input type="hidden" name="foto_base64" id="foto_base64">
+                    {% if foto_atual %}
+                        <p class="helper-text">Foto atual:</p>
+                        <img src="{{ url_for('static', filename=foto_atual) }}" alt="Foto do atleta"
+                             style="max-width:120px; border-radius:0.75rem; margin-top:0.25rem;">
+                    {% endif %}
+                </div>
+
+                <div class="form-group form-group-full">
+                    <h3 style="font-size:1rem; margin-top:0.75rem;">Grupos do atleta</h3>
+                    {% if grupos %}
+                        <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
+                            {% for g in grupos %}
+                                <label class="badge badge-neutral" style="cursor:pointer;">
+                                    <input type="checkbox" name="grupos_ids" value="{{ g.id }}"
+                                           {% if g.id in grupos_do_atleta %}checked{% endif %}
+                                           style="margin-right:0.25rem;">
+                                    {{ g.nome }}
+                                </label>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="helper-text">
+                            Nenhum grupo cadastrado ainda. Crie grupos na área de <strong>Grupos</strong>.
+                        </p>
                     {% endif %}
                 </div>
             </div>
 
-            <div class="form-actions">
+            <div class="form-actions form-group-full">
+                <a href="{{ url_for('atletas.listar') }}" class="btn btn-outline">Cancelar</a>
                 <button type="submit" class="btn btn-primary">
-                    {% if atleta %}Salvar alterações{% else %}Cadastrar atleta{% endif %}
+                    Salvar
                 </button>
             </div>
         </form>
@@ -165,23 +207,41 @@
 </div>
 
 <script>
-    // toggle RG / CPF
-    const tipoSelect = document.getElementById('tipo_documento');
-    const rgInput = document.getElementById('rg');
-    const cpfInput = document.getElementById('cpf');
-
-    if (tipoSelect && rgInput && cpfInput) {
-        function atualizarDocumento() {
-            if (tipoSelect.value === 'rg') {
-                rgInput.style.display = '';
-                cpfInput.style.display = 'none';
-            } else {
-                rgInput.style.display = 'none';
-                cpfInput.style.display = '';
-            }
-        }
-        atualizarDocumento();
-        tipoSelect.addEventListener('change', atualizarDocumento);
+function startCamera() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert("Câmera não suportada neste navegador.");
+        return;
     }
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+            const video = document.getElementById("camera");
+            video.srcObject = stream;
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Não foi possível acessar a câmera.");
+        });
+}
+
+function takePicture() {
+    const video = document.getElementById("camera");
+    const canvas = document.getElementById("snapshot");
+    const inputFoto = document.getElementById("foto_base64");
+
+    if (!video.srcObject) {
+        alert("Ligue a câmera antes de tirar a foto.");
+        return;
+    }
+    const w = 320;
+    const h = 320;
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0, w, h);
+
+    const dataUrl = canvas.toDataURL("image/jpeg");
+    inputFoto.value = dataUrl;
+    alert("Foto capturada com sucesso!");
+}
 </script>
 {% endblock %}

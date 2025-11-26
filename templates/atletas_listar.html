@@ -1,128 +1,97 @@
 {% extends "base.html" %}
-{% block title %}Alunos & Responsáveis{% endblock %}
+{% block title %}Alunos & Responsáveis · Aurora Tech{% endblock %}
 
 {% block content %}
-<div class="main-header">
+<div class="page-header">
     <div>
-        <h1 class="page-title">Gestão de Alunos</h1>
-        <p class="page-subtitle">Alunos e responsáveis da escolinha.</p>
+        <h1 class="page-title">Alunos & Responsáveis</h1>
+        <p class="page-subtitle">
+            Cadastre e gerencie os atletas, responsáveis, documentos e vínculos com grupos.
+        </p>
     </div>
-
-    <div class="main-header-actions">
-        <a href="#" class="btn btn-outline">Modelo</a>
-        <a href="#" class="btn btn-secondary">Importar</a>
-        <a href="#" class="btn btn-secondary">Exportar</a>
-        <a href="#" class="btn btn-outline">PDF</a>
-        <a href="{{ url_for('atletas.novo') }}" class="btn btn-primary">+ Novo Aluno</a>
+    <div class="page-header-actions">
+        <a href="{{ url_for('atletas.importar') }}" class="btn btn-secondary">
+            Importar
+        </a>
+        <a href="{{ url_for('atletas.exportar') }}" class="btn btn-secondary">
+            Exportar
+        </a>
+        <a href="{{ url_for('atletas.novo') }}" class="btn btn-primary">
+            + Novo aluno
+        </a>
     </div>
 </div>
 
 <div class="card">
-    <div class="list-header">
-        <div class="list-filters">
-            <input class="input" type="text" name="q"
-                   placeholder="Buscar por aluno ou responsável..."
-                   value="{{ filtros.q or '' }}">
-            <select class="select" name="idade">
-                <option value="">Idade: Todos</option>
-                <option value="0-10">0-10 anos</option>
-                <option value="11-15">11-15 anos</option>
-                <option value="16-99">16+ anos</option>
-            </select>
-            <select class="select" name="status">
-                <option value="">Status: Todos</option>
-                <option value="ATIVO" {% if filtros.status == 'ATIVO' %}selected{% endif %}>Ativo</option>
-                <option value="INATIVO" {% if filtros.status == 'INATIVO' %}selected{% endif %}>Inativo</option>
-            </select>
-            <select class="select" name="financeiro">
-                <option value="">Financeiro: Todos</option>
-                <option value="ok" {% if filtros.financeiro == 'ok' %}selected{% endif %}>Em dia</option>
-                <option value="pendente" {% if filtros.financeiro == 'pendente' %}selected{% endif %}>Pendente</option>
-            </select>
-            <select class="select" name="docs">
-                <option value="">Docs: Todos</option>
-                <option value="ok" {% if filtros.docs == 'ok' %}selected{% endif %}>OK</option>
-                <option value="pendente" {% if filtros.docs == 'pendente' %}selected{% endif %}>Pendentes</option>
-            </select>
-        </div>
-    </div>
-
-    <div class="table-wrapper">
-        <table class="table">
+    <div class="card-body">
+        {% if atletas %}
+        <table class="table table-striped">
             <thead>
             <tr>
-                <th>Aluno</th>
+                <th>Nome</th>
                 <th>Idade</th>
-                <th>Grupo</th>
+                <th>Posição</th>
                 <th>Responsável</th>
-                <th>Status</th>
-                <th style="width:1%;">&nbsp;</th>
+                <th>Telefone</th>
+                <th>Financeiro</th>
+                <th>Documentos</th>
+                <th>Ações</th>
             </tr>
             </thead>
             <tbody>
-            {% if atletas %}
-                {% for a in atletas %}
-                <tr>
-                    <td>
-                        <strong>
-                            <a href="{{ url_for('atletas.editar', atleta_id=a.id) }}">
-                                {{ a.nome }}
-                            </a>
-                        </strong><br>
-                        <span style="font-size:0.8rem;color:#6b7280;">
-                            Tel: {{ a.telefone or a.telefone_residencial or '-' }}
-                        </span>
-                    </td>
-                    <td>{{ a.idade_anos or '-' }} anos</td>
-                    <td>
-                        {% if a.grupos %}
-                            {% for g in a.grupos %}
-                                <span class="badge badge-neutral">{{ g.nome }}</span>
-                            {% endfor %}
-                        {% else %}
-                            -
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if a.responsavel_nome %}
-                            {{ a.responsavel_nome }}<br>
-                            <span style="font-size:0.8rem;color:#6b7280;">
-                                {{ a.responsavel_telefone or '' }}
-                            </span>
-                        {% else %}
-                            -
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if a.status == 'ATIVO' %}
-                            <span class="badge badge-success">Ativo</span>
-                        {% else %}
-                            <span class="badge badge-neutral">Inativo</span>
-                        {% endif %}
-                        {% if a.tem_pend_financeira %}
-                            <span class="badge badge-danger">1 Pendente</span>
-                        {% endif %}
-                        {% if a.docs_pendentes %}
-                            <span class="badge badge-warning">DOC</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <!-- WhatsApp cobrança -->
-                        {% if a.responsavel_telefone %}
-                        <a class="btn btn-sm btn-outline"
-                           href="https://wa.me/55{{ a.responsavel_telefone|replace('(','')|replace(')','')|replace('-','')|replace(' ','') }}"
-                           target="_blank">
-                            💬
-                        </a>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            {% else %}
-                <tr><td colspan="6">Nenhum aluno encontrado.</td></tr>
-            {% endif %}
+            {% for a in atletas %}
+            <tr>
+                <td>{{ a.nome }}</td>
+                <td>
+                    {% if a.idade_anos %}
+                        {{ a.idade_anos }} anos
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+                <td>{{ a.posicao or '—' }}</td>
+                <td>{{ a.responsavel_nome or '—' }}</td>
+                <td>{{ a.responsavel_telefone or a.telefone or '—' }}</td>
+                <td>
+                    {% if a.tem_pend_financeira %}
+                        <span class="badge badge-danger">Pendências</span>
+                    {% else %}
+                        <span class="badge badge-success">Em dia</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if a.docs_pendentes %}
+                        <span class="badge badge-danger">Pendentes</span>
+                    {% else %}
+                        <span class="badge badge-success">OK</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{{ url_for('atletas.editar', atleta_id=a.id) }}" class="btn btn-sm btn-outline">
+                        Ver / Editar
+                    </a>
+
+                    <a href="{{ url_for('atletas.cobrar_documentos', atleta_id=a.id) }}"
+                       class="btn btn-sm btn-secondary">
+                        Cobrar docs (WhatsApp)
+                    </a>
+
+                    {% if a.tem_pend_financeira %}
+                    <a href="{{ url_for('financeiro.cobrar_whatsapp', atleta_id=a.id) }}"
+                       class="btn btn-sm btn-secondary">
+                        Cobrança financeira
+                    </a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
             </tbody>
         </table>
+        {% else %}
+            <p class="empty-state">
+                Nenhum aluno cadastrado ainda. Clique em <strong>“Novo aluno”</strong> para começar.
+            </p>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

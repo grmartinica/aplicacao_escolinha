@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% if usuario %}
+    {% set page_title = "Editar usuário" %}
+{% else %}
+    {% set page_title = "Novo usuário" %}
+{% endif %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">{{ page_title }}</h1>
+        <p class="page-subtitle">
+            Defina dados de acesso para admins, professores e responsáveis.
+        </p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" class="form-grid">
+            <div class="form-group">
+                <label for="nome">Nome completo</label>
+                <input type="text" id="nome" name="nome" class="form-control"
+                       value="{{ usuario.nome if usuario else '' }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">E-mail</label>
+                <input type="email" id="email" name="email" class="form-control"
+                       value="{{ usuario.email if usuario else '' }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="telefone">Telefone</label>
+                <input type="text" id="telefone" name="telefone" class="form-control"
+                       value="{{ usuario.telefone if usuario else '' }}">
+            </div>
+
+            <div class="form-group">
+                <label for="role">Perfil</label>
+                <select id="role" name="role" class="form-control">
+                    <option value="ADMIN" {% if usuario and usuario.role == 'ADMIN' %}selected{% endif %}>Admin</option>
+                    <option value="COACH" {% if usuario and usuario.role == 'COACH' %}selected{% endif %}>Professor</option>
+                    <option value="PARENT" {% if usuario and usuario.role == 'PARENT' %}selected{% endif %}>Responsável</option>
+                    <option value="SUPER_ADMIN" {% if usuario and usuario.role == 'SUPER_ADMIN' %}selected{% endif %}>Super Admin</option>
+                </select>
+            </div>
+
+            {% if usuario %}
+            <div class="form-group">
+                <label>Status</label>
+                <select name="ativo" class="form-control">
+                    <option value="1" {% if usuario.ativo %}selected{% endif %}>Ativo</option>
+                    <option value="0" {% if not usuario.ativo %}selected{% endif %}>Inativo</option>
+                </select>
+            </div>
+            {% else %}
+            <div class="form-group">
+                <label for="senha">Senha inicial</label>
+                <input type="password" id="senha" name="senha" class="form-control" required>
+            </div>
+            {% endif %}
+
+            <div class="form-actions form-group-full">
+                <a href="{{ url_for('usuarios_sistema.listar') }}" class="btn btn-outline">Cancelar</a>
+                <button type="submit" class="btn btn-primary">Salvar</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

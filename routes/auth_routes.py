@@ -18,9 +18,7 @@ def login():
     if request.method == "POST":
         tipo_login = request.form.get("tipo_login") or "admin"
 
-        # -------------------------
-        # ADMIN / PROFESSOR / SUPER
-        # -------------------------
+        # ADMIN / PROFESSOR / SUPER_ADMIN
         if tipo_login == "admin":
             email = (request.form.get("email") or "").strip()
             senha = (request.form.get("senha") or "").strip()
@@ -45,18 +43,15 @@ def login():
             login_user(user)
             return redirect(url_for("dashboard.index"))
 
-        # -------------------------
-        # RESPONSÁVEL (PARENT)
-        # -------------------------
+        # RESPONSÁVEL
         elif tipo_login == "responsavel":
             cpf = (request.form.get("cpf") or "").strip()
-            senha = (request.form.get("telefone") or "").strip()  # campo do formulário
+            senha = (request.form.get("telefone") or "").strip()
 
             if not cpf or not senha:
                 flash("Informe CPF e senha.", "danger")
                 return render_template("login.html")
 
-            # Encontra o responsável pelo CPF
             resp = Responsavel.query.filter_by(cpf=cpf).first()
             if not resp or not resp.usuario or not resp.usuario.ativo:
                 flash("CPF não localizado ou sem acesso configurado.", "danger")
@@ -81,25 +76,16 @@ def login():
     return render_template("login.html")
 
 
-@auth_bp.route("/logout")
+@auth_bp.route("/logout", methods=["GET", "POST"])
 @login_required
 def logout():
     logout_user()
     return redirect(url_for("auth.login"))
 
 
-# =========================
-# CADASTRO DE RESPONSÁVEL VIA CPF
-# =========================
-
-
+# cadastro de responsável em 2 passos (já estava no doc):
 @auth_bp.route("/cadastro_responsavel", methods=["GET", "POST"])
 def cadastro_responsavel_cpf():
-    """
-    Passo 1: responsável informa o CPF.
-    Se existir um registro de Responsavel com esse CPF e SEM usuario_id,
-    redirecionamos para criar usuário (e-mail + senha).
-    """
     if request.method == "POST":
         cpf = (request.form.get("cpf") or "").strip()
 
@@ -119,9 +105,6 @@ def cadastro_responsavel_cpf():
 
 @auth_bp.route("/cadastro_responsavel/<int:responsavel_id>", methods=["GET", "POST"])
 def cadastro_responsavel_criar_usuario(responsavel_id):
-    """
-    Passo 2: cria o usuário (PARENT) associado ao Responsavel informado.
-    """
     resp = Responsavel.query.get_or_404(responsavel_id)
 
     if resp.usuario_id:
@@ -155,7 +138,7 @@ def cadastro_responsavel_criar_usuario(responsavel_id):
             ativo=True,
         )
         db.session.add(user)
-        db.session.flush()  # pega id sem commit
+        db.session.flush()
 
         resp.usuario_id = user.id
         db.session.commit()

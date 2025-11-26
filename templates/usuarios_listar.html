@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Usuários do Sistema{% endblock %}
+{% block title %}Usuários do Sistema · Aurora Tech{% endblock %}
 
 {% block content %}
 <div class="page-header">
@@ -8,6 +8,11 @@
         <p class="page-subtitle">
             Controle de acesso de admins, professores e responsáveis.
         </p>
+    </div>
+    <div class="page-header-actions">
+        <a href="{{ url_for('usuarios_sistema.novo') }}" class="btn btn-primary">
+            + Novo usuário
+        </a>
     </div>
 </div>
 
@@ -21,6 +26,7 @@
                 <th>E-mail</th>
                 <th>Perfil</th>
                 <th>Status</th>
+                <th>Ações</th>
             </tr>
             </thead>
             <tbody>
@@ -36,12 +42,28 @@
                         <span class="badge badge-neutral">Inativo</span>
                     {% endif %}
                 </td>
+                <td>
+                    <a href="{{ url_for('usuarios_sistema.editar', usuario_id=u.id) }}"
+                       class="btn btn-sm btn-outline">
+                        Editar
+                    </a>
+
+                    <form method="post"
+                          action="{{ url_for('usuarios_sistema.reset_senha', usuario_id=u.id) }}"
+                          style="display:inline;">
+                        <button type="submit" class="btn btn-sm btn-secondary">
+                            Resetar senha
+                        </button>
+                    </form>
+                </td>
             </tr>
             {% endfor %}
             </tbody>
         </table>
         {% else %}
-            <p class="empty-state">Nenhum usuário encontrado.</p>
+            <p class="empty-state">
+                Nenhum usuário cadastrado ainda.
+            </p>
         {% endif %}
     </div>
 </div>

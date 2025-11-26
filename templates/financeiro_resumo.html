@@ -1,68 +1,116 @@
 {% extends "base.html" %}
-{% block title %}Financeiro | Admin{% endblock %}
-{% block content %}
-<h2>Financeiro (Admin)</h2>
+{% block title %}Financeiro · Aurora Tech{% endblock %}
 
-<div class="kpis">
-  <div class="kpi">
-      <div class="t">Total pago</div>
-      <div class="v">R$ {{ '%.2f'|format(total_pago) }}</div>
-  </div>
-  <div class="kpi">
-      <div class="t">Total pendente</div>
-      <div class="v">R$ {{ '%.2f'|format(total_pendente) }}</div>
-  </div>
-  <div class="kpi">
-      <div class="t">Inadimplências</div>
-      <div class="v">{{ qtd_inad }}</div>
-  </div>
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Financeiro</h1>
+        <p class="page-subtitle">
+            Acompanhe mensalidades pagas, pendentes e faça cobranças via WhatsApp.
+        </p>
+    </div>
 </div>
 
-<table class="table">
-  <thead>
-    <tr>
-      <th>Atleta</th>
-      <th>Descrição</th>
-      <th>Vencimento</th>
-      <th>Valor</th>
-      <th>Status</th>
-      <th>Cobrança</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for c in itens %}
-      <tr>
-        <td>{{ c.atleta.nome if c.atleta else '-' }}</td>
-        <td>{{ c.descricao }}</td>
-        <td>{{ c.vencimento }}</td>
-        <td>R$ {{ '%.2f'|format(c.valor) }}</td>
-        <td>{{ c.status }}</td>
-        <td>
-            {% if c.status != 'PAGO' and c.atleta and c.atleta.responsavel_telefone %}
-                {% set tel = c.atleta.responsavel_telefone
-                    |replace(' ','')
-                    |replace('-','')
-                    |replace('(','')
-                    |replace(')','') %}
-                {% set msg = (
-                    'Olá! As mensalidades do atleta ' ~ (c.atleta.nome or '') ~
-                    ' estão em aberto. Vencimento: ' ~ (c.vencimento|string) ~
-                    ', valor R$ ' ~ ('%.2f'|format(c.valor)) ~
-                    '. Por favor, entre em contato com a escolinha para regularizar. Muito obrigado!'
-                ) %}
-                <a class="btn btn-outline btn-sm"
-                   target="_blank"
-                   href="https://wa.me/{{ tel }}?text={{ msg|urlencode }}">
-                    Cobrar no WhatsApp
-                </a>
-            {% else %}
-                -
-            {% endif %}
-        </td>
-      </tr>
-    {% else %}
-      <tr><td colspan="6">Sem registros.</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
+<div class="kpis">
+    <div class="kpi">
+        <div class="t">Total pago</div>
+        <div class="v">R$ {{ '%.2f'|format(total_pago) }}</div>
+    </div>
+    <div class="kpi">
+        <div class="t">Total pendente</div>
+        <div class="v">R$ {{ '%.2f'|format(total_pendente) }}</div>
+    </div>
+    <div class="kpi">
+        <div class="t">Alunos inadimplentes</div>
+        <div class="v">{{ qtd_inad }}</div>
+    </div>
+</div>
+
+<div class="card" style="margin-top:1rem;">
+    <div class="card-body">
+        <form method="get" class="form-grid">
+            <div class="form-group">
+                <label for="nome">Nome do aluno</label>
+                <input type="text" id="nome" name="nome" class="form-control"
+                       value="{{ filtros.nome }}">
+            </div>
+            <div class="form-group">
+                <label for="status">Status</label>
+                <select id="status" name="status" class="form-control">
+                    <option value="TODOS" {% if filtros.status == 'TODOS' %}selected{% endif %}>Todos</option>
+                    <option value="PENDENTE" {% if filtros.status == 'PENDENTE' %}selected{% endif %}>Pendentes</option>
+                    <option value="ATRASADO" {% if filtros.status == 'ATRASADO' %}selected{% endif %}>Atrasados</option>
+                    <option value="PAGO" {% if filtros.status == 'PAGO' %}selected{% endif %}>Pagos</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Somente inadimplentes</label>
+                <label class="checkbox-label">
+                    <input type="checkbox" name="inadimplentes" value="1"
+                           {% if filtros.inadimplentes == '1' %}checked{% endif %}>
+                    Mostrar só pendentes/atrasados
+                </label>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Filtrar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card" style="margin-top:1rem;">
+    <div class="card-body">
+        {% if itens %}
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Aluno</th>
+                <th>Vencimento</th>
+                <th>Valor</th>
+                <th>Status</th>
+                <th>Ações</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for c in itens %}
+            <tr>
+                <td>{{ c.atleta.nome if c.atleta else '—' }}</td>
+                <td>
+                    {% if c.vencimento %}
+                        {{ c.vencimento.strftime('%d/%m/%Y') }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+                <td>R$ {{ '%.2f'|format(c.valor or 0) }}</td>
+                <td>
+                    {% if c.status in ['PENDENTE', 'ATRASADO'] %}
+                        <span class="badge badge-danger">{{ c.status }}</span>
+                    {% elif c.status == 'PAGO' %}
+                        <span class="badge badge-success">{{ c.status }}</span>
+                    {% else %}
+                        <span class="badge badge-neutral">{{ c.status }}</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if c.atleta and c.status in ['PENDENTE', 'ATRASADO'] %}
+                    <a href="{{ url_for('financeiro.cobrar_whatsapp', atleta_id=c.atleta.id) }}"
+                       class="btn btn-sm btn-secondary">
+                        Cobrar via WhatsApp
+                    </a>
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <p class="empty-state">
+                Nenhum lançamento encontrado com os filtros atuais.
+            </p>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}
