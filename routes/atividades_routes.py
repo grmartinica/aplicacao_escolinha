@@ -13,37 +13,13 @@ atividades_bp = Blueprint('atividades', __name__, url_prefix='/atividades')
 @atividades_bp.route('/listar')
 @login_required
 def listar():
-    # mês/ano atuais ou vindos por querystring
-    hoje = date.today()
-    ano = request.args.get('ano', type=int) or hoje.year
-    mes = request.args.get('mes', type=int) or hoje.month
+    atividades = Atividade.query.order_by(Atividade.data, Atividade.hora_inicio).all()
 
-    primeiro_dia = date(ano, mes, 1)
-    if mes == 12:
-        ultimo_dia = date(ano + 1, 1, 1) - timedelta(days=1)
-    else:
-        ultimo_dia = date(ano, mes + 1, 1) - timedelta(days=1)
+    atividades_por_dia = {}
+    for a in atividades:
+        atividades_por_dia.setdefault(a.data, []).append(a)
 
-    atividades_mes = Atividade.query.filter(
-        Atividade.data >= primeiro_dia,
-        Atividade.data <= ultimo_dia
-    ).order_by(Atividade.data, Atividade.hora_inicio).all()
-
-    eventos_por_dia = {}
-    for a in atividades_mes:
-        dia = a.data.day
-        eventos_por_dia.setdefault(dia, []).append(a)
-
-    cal = Calendar(firstweekday=0)  # 0 = segunda
-    semanas = cal.monthdayscalendar(ano, mes)  # lista de semanas com 7 dias (0 = vazio)
-
-    return render_template(
-        'atividades_listar.html',
-        ano=ano,
-        mes=mes,
-        semanas=semanas,
-        eventos_por_dia=eventos_por_dia
-    )
+    return render_template('atividades_listar.html', atividades_por_dia=atividades_por_dia)
 
 
 @atividades_bp.route('/nova', methods=['GET', 'POST'])

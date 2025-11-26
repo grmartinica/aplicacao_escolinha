@@ -1,90 +1,68 @@
 {% extends "base.html" %}
 {% block title %}Financeiro | Admin{% endblock %}
-
 {% block content %}
-<div class="page-header">
-    <div>
-        <h1 class="page-title">Financeiro</h1>
-        <p class="page-subtitle">Resumo de mensalidades e situação de pagamento.</p>
-    </div>
+<h2>Financeiro (Admin)</h2>
+
+<div class="kpis">
+  <div class="kpi">
+      <div class="t">Total pago</div>
+      <div class="v">R$ {{ '%.2f'|format(total_pago) }}</div>
+  </div>
+  <div class="kpi">
+      <div class="t">Total pendente</div>
+      <div class="v">R$ {{ '%.2f'|format(total_pendente) }}</div>
+  </div>
+  <div class="kpi">
+      <div class="t">Inadimplências</div>
+      <div class="v">{{ qtd_inad }}</div>
+  </div>
 </div>
 
-<div class="stats-grid">
-    <div class="stat-card">
-        <div class="stat-label">Total pago</div>
-        <div class="stat-value">R$ {{ '%.2f'|format(total_pago) }}</div>
-        <div class="stat-pill">Mensalidades já recebidas</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-label">Total pendente</div>
-        <div class="stat-value">R$ {{ '%.2f'|format(total_pendente) }}</div>
-        <div class="stat-pill">Mensalidades em aberto</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-label">Inadimplências</div>
-        <div class="stat-value">{{ qtd_inad }}</div>
-        <div class="stat-pill">Títulos em atraso ou pendentes</div>
-    </div>
-</div>
-
-<div class="card">
-    <div class="card-body">
-        <form method="get" class="filter-bar">
-            <div class="form-group inline">
-                <label for="nome">Atleta</label>
-                <input type="text" id="nome" name="nome" value="{{ filtros.nome }}">
-            </div>
-
-            <div class="form-group inline">
-                <label for="status">Status</label>
-                <select id="status" name="status">
-                    <option value="TODOS" {% if filtros.status == 'TODOS' %}selected{% endif %}>Todos</option>
-                    <option value="PENDENTE" {% if filtros.status == 'PENDENTE' %}selected{% endif %}>Pendente</option>
-                    <option value="ATRASADO" {% if filtros.status == 'ATRASADO' %}selected{% endif %}>Atrasado</option>
-                    <option value="PAGO" {% if filtros.status == 'PAGO' %}selected{% endif %}>Pago</option>
-                    <option value="CANCELADO" {% if filtros.status == 'CANCELADO' %}selected{% endif %}>Cancelado</option>
-                </select>
-            </div>
-
-            <div class="form-group inline">
-                <label class="checkbox-inline">
-                    <input type="checkbox" name="inadimplentes" value="1"
-                           {% if filtros.inadimplentes == '1' %}checked{% endif %}>
-                    Mostrar apenas inadimplentes
-                </label>
-            </div>
-
-            <button type="submit" class="btn btn-outline">Filtrar</button>
-        </form>
-    </div>
-</div>
-
-<div class="card">
-    <div class="card-body">
-        <table class="table table-striped">
-            <thead>
-            <tr>
-                <th>Atleta</th>
-                <th>Descrição</th>
-                <th>Vencimento</th>
-                <th>Valor</th>
-                <th>Status</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for c in itens %}
-                <tr>
-                    <td>{{ c.atleta.nome if c.atleta else '-' }}</td>
-                    <td>{{ c.descricao }}</td>
-                    <td>{{ c.vencimento.strftime('%d/%m/%Y') }}</td>
-                    <td>R$ {{ '%.2f'|format(c.valor) }}</td>
-                    <td>{{ c.status }}</td>
-                </tr>
+<table class="table">
+  <thead>
+    <tr>
+      <th>Atleta</th>
+      <th>Descrição</th>
+      <th>Vencimento</th>
+      <th>Valor</th>
+      <th>Status</th>
+      <th>Cobrança</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for c in itens %}
+      <tr>
+        <td>{{ c.atleta.nome if c.atleta else '-' }}</td>
+        <td>{{ c.descricao }}</td>
+        <td>{{ c.vencimento }}</td>
+        <td>R$ {{ '%.2f'|format(c.valor) }}</td>
+        <td>{{ c.status }}</td>
+        <td>
+            {% if c.status != 'PAGO' and c.atleta and c.atleta.responsavel_telefone %}
+                {% set tel = c.atleta.responsavel_telefone
+                    |replace(' ','')
+                    |replace('-','')
+                    |replace('(','')
+                    |replace(')','') %}
+                {% set msg = (
+                    'Olá! As mensalidades do atleta ' ~ (c.atleta.nome or '') ~
+                    ' estão em aberto. Vencimento: ' ~ (c.vencimento|string) ~
+                    ', valor R$ ' ~ ('%.2f'|format(c.valor)) ~
+                    '. Por favor, entre em contato com a escolinha para regularizar. Muito obrigado!'
+                ) %}
+                <a class="btn btn-outline btn-sm"
+                   target="_blank"
+                   href="https://wa.me/{{ tel }}?text={{ msg|urlencode }}">
+                    Cobrar no WhatsApp
+                </a>
             {% else %}
-                <tr><td colspan="5">Sem registros com os filtros atuais.</td></tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
+                -
+            {% endif %}
+        </td>
+      </tr>
+    {% else %}
+      <tr><td colspan="6">Sem registros.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
 {% endblock %}

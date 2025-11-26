@@ -38,21 +38,31 @@ class Responsavel(db.Model):
 class Atleta(db.Model):
     __tablename__ = 'atletas'
 
+class Atleta(db.Model):
+    __tablename__ = 'atletas'
+
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(150), nullable=False)
+
+    # novos campos
+    rg = db.Column(db.String(20))
+    cpf = db.Column(db.String(14))
+
     data_nascimento = db.Column(db.Date, nullable=False)
     posicao = db.Column(db.String(50))
 
-    # novos campos mapeando o que já existe no banco
-    rg = db.Column(db.String(20))
-    cpf = db.Column(db.String(14))
+    documento = db.Column(db.String(50))  # pode continuar usando se quiser algo genérico
     telefone_residencial = db.Column(db.String(30))
+
     telefone = db.Column(db.String(30))
     validade_atestado = db.Column(db.Date)
     informacoes_adicionais = db.Column(db.String(255))
 
-    # campo antigo "documento" mantido por compatibilidade, se ainda existir na tabela
-    documento = db.Column(db.String(50))
+    # dados do responsável (simples, por atleta)
+    responsavel_nome = db.Column(db.String(150))
+    responsavel_cpf = db.Column(db.String(14))
+    responsavel_telefone = db.Column(db.String(30))
+    responsavel_parentesco = db.Column(db.String(50))
 
     status = db.Column(db.Enum('ATIVO', 'INATIVO'), default='ATIVO')
     criado_em = db.Column(db.DateTime, default=datetime.utcnow)

@@ -5,62 +5,54 @@
 <div class="page-header">
     <div>
         <h1 class="page-title">Agenda</h1>
-        <p class="page-subtitle">Visualize os treinos e atividades no calendário mensal.</p>
+        <p class="page-subtitle">Visualize os treinos e atividades organizados por dia.</p>
     </div>
-    <a href="{{ url_for('atividades.nova') }}" class="btn btn-primary">+ Nova atividade</a>
+    <a class="btn btn-primary" href="{{ url_for('atividades.nova') }}">+ Nova atividade</a>
 </div>
 
-<div class="card">
-    <div class="card-body">
-        <div class="calendar-nav">
-            <a class="btn btn-outline"
-               href="{{ url_for('atividades.listar', ano=ano if mes > 1 else ano-1, mes=mes-1 if mes > 1 else 12) }}">
-                « Mês anterior
-            </a>
-            <div class="calendar-title">
-                {{ "%02d"|format(mes) }}/{{ ano }}
-            </div>
-            <a class="btn btn-outline"
-               href="{{ url_for('atividades.listar', ano=ano if mes < 12 else ano+1, mes=mes+1 if mes < 12 else 1) }}">
-                Próximo mês »
-            </a>
-        </div>
+{% if atividades_por_dia %}
+    <div class="card">
+        <div class="card-body">
+            <div class="agenda-grid">
+                {% for dia, lista in atividades_por_dia.items() %}
+                    <div class="agenda-day">
+                        <div class="agenda-day-header">
+                            <div class="agenda-day-date">
+                                {{ dia.strftime('%d/%m') }}
+                            </div>
+                            <div class="agenda-day-weekday">
+                                {{ dia.strftime('%A')|capitalize }}
+                            </div>
+                        </div>
 
-        <div class="calendar">
-            <div class="calendar-head">Seg</div>
-            <div class="calendar-head">Ter</div>
-            <div class="calendar-head">Qua</div>
-            <div class="calendar-head">Qui</div>
-            <div class="calendar-head">Sex</div>
-            <div class="calendar-head">Sáb</div>
-            <div class="calendar-head">Dom</div>
-
-            {% for semana in semanas %}
-                {% for dia in semana %}
-                    <div class="calendar-cell {% if dia == 0 %}calendar-empty{% endif %}">
-                        {% if dia != 0 %}
-                            <div class="calendar-day-number">{{ dia }}</div>
-                            {% set eventos = eventos_por_dia.get(dia, []) %}
-                            {% for ev in eventos %}
-                                <div class="calendar-event">
-                                    <div class="calendar-event-time">
-                                        {{ ev.hora_inicio.strftime('%H:%M') if ev.hora_inicio else '' }}
+                        <div class="agenda-day-body">
+                            {% for a in lista %}
+                                <div class="agenda-item">
+                                    <div class="agenda-item-time">
+                                        {{ a.hora_inicio.strftime('%H:%M') if a.hora_inicio else '--:--' }}
                                     </div>
-                                    <div class="calendar-event-title">
-                                        {{ ev.titulo }}
+                                    <div class="agenda-item-info">
+                                        <div class="agenda-item-title">{{ a.titulo }}</div>
+                                        <div class="agenda-item-sub">
+                                            Grupo: {{ a.grupo.nome if a.grupo else '-' }}
+                                            {% if a.local %} · Local: {{ a.local }}{% endif %}
+                                        </div>
+                                        <div class="agenda-item-actions">
+                                            <a href="{{ url_for('atividades.presencas', atividade_id=a.id) }}"
+                                               class="btn btn-outline btn-sm">
+                                                Presenças
+                                            </a>
+                                        </div>
                                     </div>
-                                    <div class="calendar-event-group">
-                                        {{ ev.grupo.nome if ev.grupo else '-' }}
-                                    </div>
-                                    <a href="{{ url_for('atividades.presencas', atividade_id=ev.id) }}"
-                                       class="calendar-event-link">Presenças</a>
                                 </div>
                             {% endfor %}
-                        {% endif %}
+                        </div>
                     </div>
                 {% endfor %}
-            {% endfor %}
+            </div>
         </div>
     </div>
-</div>
+{% else %}
+    <p class="empty-state">Nenhuma atividade cadastrada ainda.</p>
+{% endif %}
 {% endblock %}

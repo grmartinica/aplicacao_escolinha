@@ -660,37 +660,67 @@ textarea:focus {
 }
 
 /* Agenda em grid (caso já esteja usando .calendar-grid/.calendar-cell) */
-.calendar-grid {
+.agenda-grid {
     display: grid;
-    grid-template-columns: repeat(7, minmax(0, 1fr));
-    gap: 0.5rem;
-    margin-top: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 1rem;
 }
 
-.calendar-header {
+.agenda-day {
+    background: rgba(4, 7, 18, 0.9);
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.04);
+    padding: 0.8rem;
+}
+
+.agenda-day-header {
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding-bottom: 0.35rem;
+    margin-bottom: 0.35rem;
+}
+
+.agenda-day-date {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.agenda-day-weekday {
     font-size: 0.75rem;
+    color: #a3a7c0;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: #a7aac2;
 }
 
-.calendar-cell {
-    min-height: 120px;
-    padding: 0.5rem;
-    border-radius: 12px;
-    background: rgba(10, 14, 32, 0.96);
-    border: 1px solid rgba(255, 255, 255, 0.04);
-    font-size: 0.8rem;
+.agenda-item {
+    display: flex;
+    gap: 0.6rem;
+    padding: 0.45rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
 }
 
-.calendar-cell .day-number {
+.agenda-item:last-child {
+    border-bottom: none;
+}
+
+.agenda-item-time {
+    font-size: 0.9rem;
     font-weight: 600;
-    margin-bottom: 0.25rem;
+    color: #ffb347;
+    min-width: 46px;
 }
 
-.calendar-cell .activity {
+.agenda-item-title {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.agenda-item-sub {
+    font-size: 0.78rem;
+    color: #a3a7c0;
+}
+
+.agenda-item-actions {
     margin-top: 0.25rem;
-    font-size: 0.75rem;
 }
 
 /* Responsividade básica para mobile */

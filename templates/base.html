@@ -16,20 +16,56 @@
     {% set endpoint = request.endpoint or '' %}
 
     <nav>
+        {% if current_user.is_authenticated %}
         <ul class="navbar-nav">
-            <li><a class="nav-link {% if endpoint.startswith('dashboard') %}active{% endif %}"
-                   href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
-            <li><a class="nav-link {% if endpoint.startswith('atletas') %}active{% endif %}"
-                   href="{{ url_for('atletas.listar') }}">Atletas</a></li>
-            <li><a class="nav-link {% if endpoint.startswith('grupos') %}active{% endif %}"
-                   href="{{ url_for('grupos.listar') }}">Grupos</a></li>
-            <li><a class="nav-link {% if endpoint.startswith('atividades') %}active{% endif %}"
-                   href="{{ url_for('atividades.listar') }}">Agenda</a></li>
-            <li><a class="nav-link {% if endpoint.startswith('financeiro') %}active{% endif %}"
-                   href="{{ url_for('financeiro.resumo') }}">Financeiro</a></li>
-            <li><a class="nav-link {% if endpoint.startswith('planos') %}active{% endif %}"
-                   href="{{ url_for('planos.listar') }}">Planos</a></li>
+            {# ADMIN vê tudo #}
+            {% if current_user.role == 'ADMIN' %}
+                <li><a class="nav-link {% if endpoint.startswith('dashboard') %}active{% endif %}"
+                       href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+
+                <li><a class="nav-link {% if endpoint.startswith('atletas') %}active{% endif %}"
+                       href="{{ url_for('atletas.listar') }}">Atletas</a></li>
+
+                <li><a class="nav-link {% if endpoint.startswith('grupos') %}active{% endif %}"
+                       href="{{ url_for('grupos.listar') }}">Grupos</a></li>
+
+                <li><a class="nav-link {% if endpoint.startswith('atividades') %}active{% endif %}"
+                       href="{{ url_for('atividades.listar') }}">Agenda</a></li>
+
+                <li><a class="nav-link {% if endpoint.startswith('financeiro') %}active{% endif %}"
+                       href="{{ url_for('financeiro.resumo') }}">Financeiro</a></li>
+
+                <li><a class="nav-link {% if endpoint.startswith('planos') %}active{% endif %}"
+                       href="{{ url_for('planos.listar') }}">Planos</a></li>
+            {% elif current_user.role == 'COACH' %}
+                {# PROFESSOR: sem financeiro/planos #}
+                <li><a class="nav-link {% if endpoint.startswith('dashboard') %}active{% endif %}"
+                       href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+
+                <li><a class="nav-link {% if endpoint.startswith('atletas') %}active{% endif %}"
+                       href="{{ url_for('atletas.listar') }}">Atletas</a></li>
+
+                <li><a class="nav-link {% if endpoint.startswith('grupos') %}active{% endif %}"
+                       href="{{ url_for('grupos.listar') }}">Grupos</a></li>
+
+                <li><a class="nav-link {% if endpoint.startswith('atividades') %}active{% endif %}"
+                       href="{{ url_for('atividades.listar') }}">Agenda</a></li>
+            {% elif current_user.role == 'PARENT' %}
+                {# RESPONSÁVEL: foca em filho(s) #}
+                <li><a class="nav-link {% if endpoint.startswith('dashboard') %}active{% endif %}"
+                       href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+
+                <li><a class="nav-link {% if endpoint.startswith('atletas') %}active{% endif %}"
+                       href="{{ url_for('atletas.listar') }}">Atletas</a></li>
+
+                <li><a class="nav-link {% if endpoint.startswith('atividades') %}active{% endif %}"
+                       href="{{ url_for('atividades.listar') }}">Agenda</a></li>
+
+                <li><a class="nav-link {% if endpoint.startswith('financeiro') %}active{% endif %}"
+                       href="{{ url_for('financeiro.resumo_responsavel') }}">Financeiro</a></li>
+            {% endif %}
         </ul>
+        {% endif %}
     </nav>
 
     <div class="navbar-user">

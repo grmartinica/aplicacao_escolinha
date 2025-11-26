@@ -1,11 +1,10 @@
-// static/js/camera.js
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', function() {
     const video = document.getElementById('video');
     const captureBtn = document.getElementById('capture');
     const canvas = document.getElementById('canvas');
     const fotoInput = document.getElementById('foto_base64');
 
-    // Só roda nas telas que têm esses elementos
+    // Se não estiver na tela de atleta, não faz nada
     if (!video || !captureBtn || !canvas || !fotoInput) return;
 
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
@@ -15,12 +14,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 video.play();
             })
             .catch(err => {
-                console.error("Erro ao acessar a câmera:", err);
-                alert("Não foi possível acessar a câmera. Verifique as permissões do navegador.");
+                console.error("Erro ao acessar câmera: ", err);
             });
     } else {
-        alert("Seu navegador não suporta captura de câmera.");
-        return;
+        console.warn("getUserMedia não suportado neste navegador");
     }
 
     captureBtn.addEventListener('click', function () {
@@ -32,6 +29,6 @@ document.addEventListener('DOMContentLoaded', function () {
         ctx.drawImage(video, 0, 0, width, height);
         const dataURL = canvas.toDataURL('image/jpeg');
         fotoInput.value = dataURL;
-        alert('Foto capturada com sucesso!');
+        alert('Foto capturada!');
     });
 });

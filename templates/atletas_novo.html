@@ -10,7 +10,7 @@
 <div class="page-header">
     <div>
         <h1 class="page-title">{{ page_title }}</h1>
-        <p class="page-subtitle">Cadastre ou atualize os dados do atleta.</p>
+        <p class="page-subtitle">Cadastre ou atualize os dados do atleta e do responsável.</p>
     </div>
     <a href="{{ url_for('atletas.listar') }}" class="btn btn-outline">Voltar</a>
 </div>
@@ -18,8 +18,7 @@
 <div class="card">
     <div class="card-body">
         <form method="post" class="form-grid">
-
-            <!-- Dados principais -->
+            <!-- Dados do atleta -->
             <div class="form-group">
                 <label for="nome">Nome completo *</label>
                 <input type="text" id="nome" name="nome" class="form-control"
@@ -39,17 +38,20 @@
                        value="{{ atleta.posicao if atleta }}">
             </div>
 
-            <!-- Documentos -->
             <div class="form-group">
-                <label for="rg">RG</label>
-                <input type="text" id="rg" name="rg" class="form-control"
-                       value="{{ atleta.rg if atleta }}">
-            </div>
-
-            <div class="form-group">
-                <label for="cpf">CPF</label>
-                <input type="text" id="cpf" name="cpf" class="form-control"
-                       value="{{ atleta.cpf if atleta }}">
+                <label>Documento</label>
+                <div style="display:flex; gap:0.5rem; align-items:center;">
+                    <select id="tipo_documento" class="form-control" style="max-width:120px;">
+                        <option value="rg">RG</option>
+                        <option value="cpf">CPF</option>
+                    </select>
+                    <input type="text" id="rg" name="rg" class="form-control"
+                           placeholder="RG"
+                           value="{{ atleta.rg if atleta }}">
+                    <input type="text" id="cpf" name="cpf" class="form-control"
+                           placeholder="CPF"
+                           value="{{ atleta.cpf if atleta }}" style="display:none;">
+                </div>
             </div>
 
             <div class="form-group">
@@ -64,42 +66,9 @@
                        value="{{ atleta.validade_atestado if atleta }}">
             </div>
 
-            <!-- Plano -->
-            <div class="form-group">
-                <label for="plano_id">Plano</label>
-                <select id="plano_id" name="plano_id" class="form-control">
-                    <option value="">Nenhum</option>
-                    {% for p in planos %}
-                        <option value="{{ p.id }}"
-                        {% if plano_atual and plano_atual == p.id %}selected{% endif %}>
-                            {{ p.nome }} · R$ {{ '%.2f'|format(p.valor_mensal) }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <!-- Grupos -->
-            <div class="form-group form-group-full">
-                <label>Grupos do atleta</label>
-                {% if grupos %}
-                    <div class="chips-group">
-                        {% for g in grupos %}
-                            <label class="chip-check">
-                                <input type="checkbox" name="grupos_ids" value="{{ g.id }}"
-                                       {% if grupos_ids_do_atleta and g.id in grupos_ids_do_atleta %}checked{% endif %}>
-                                <span>{{ g.nome }}</span>
-                            </label>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <p class="empty-state">Nenhum grupo cadastrado ainda.</p>
-                {% endif %}
-            </div>
-
-            <!-- Informações adicionais -->
             <div class="form-group form-group-full">
                 <label for="informacoes_adicionais">Informações adicionais</label>
-                <textarea id="informacoes_adicionais" name="informacoes_adicionais" rows="3"
+                <textarea id="informacoes_adicionais" name="informacoes_adicionais" rows="2"
                           class="form-control">{{ atleta.informacoes_adicionais if atleta }}</textarea>
             </div>
 
@@ -113,6 +82,79 @@
             </div>
             {% endif %}
 
+            <!-- Dados do responsável -->
+            <div class="form-group form-group-full">
+                <h3 style="font-size:1rem; margin-top:0.75rem;">Responsável</h3>
+            </div>
+
+            <div class="form-group">
+                <label for="responsavel_nome">Nome do responsável</label>
+                <input type="text" id="responsavel_nome" name="responsavel_nome" class="form-control"
+                       value="{{ atleta.responsavel_nome if atleta }}">
+            </div>
+
+            <div class="form-group">
+                <label for="responsavel_parentesco">Parentesco</label>
+                <input type="text" id="responsavel_parentesco" name="responsavel_parentesco" class="form-control"
+                       placeholder="Pai, mãe, tio..."
+                       value="{{ atleta.responsavel_parentesco if atleta }}">
+            </div>
+
+            <div class="form-group">
+                <label for="responsavel_cpf">CPF do responsável</label>
+                <input type="text" id="responsavel_cpf" name="responsavel_cpf" class="form-control"
+                       value="{{ atleta.responsavel_cpf if atleta }}">
+            </div>
+
+            <div class="form-group">
+                <label for="responsavel_telefone">Telefone do responsável</label>
+                <input type="text" id="responsavel_telefone" name="responsavel_telefone" class="form-control"
+                       value="{{ atleta.responsavel_telefone if atleta }}">
+            </div>
+
+            <!-- Grupos -->
+            <div class="form-group form-group-full">
+                <h3 style="font-size:1rem; margin-top:0.75rem;">Grupos do atleta</h3>
+                {% if grupos %}
+                    <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
+                        {% for g in grupos %}
+                            <label class="checkbox-inline">
+                                <input type="checkbox" name="grupos_ids"
+                                       value="{{ g.id }}"
+                                       {% if grupos_do_atleta and g.id in grupos_do_atleta %}checked{% endif %}>
+                                {{ g.nome }}
+                            </label>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="empty-state">Nenhum grupo cadastrado ainda.</p>
+                {% endif %}
+            </div>
+
+            <!-- Câmera / Foto -->
+            <div class="form-group form-group-full">
+                <h3 style="font-size:1rem; margin-top:0.75rem;">Foto do atleta</h3>
+                <div style="display:flex; flex-wrap:wrap; gap:1rem; align-items:flex-start;">
+                    <div>
+                        <video id="video" autoplay playsinline style="width: 320px; border-radius: 10px;"></video>
+                        <button type="button" id="capture" class="btn btn-primary" style="margin-top:0.5rem;">
+                            Tirar foto
+                        </button>
+                        <canvas id="canvas" style="display:none;"></canvas>
+                        <input type="hidden" id="foto_base64" name="foto_base64">
+                    </div>
+
+                    {% if foto_atual %}
+                    <div>
+                        <p style="font-size:0.8rem; color:#a3a7c0;">Foto atual:</p>
+                        <img src="{{ url_for('static', filename=foto_atual) }}"
+                             alt="Foto atual do atleta"
+                             style="width: 160px; border-radius:10px; border:1px solid rgba(255,255,255,0.1);">
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary">
                     {% if atleta %}Salvar alterações{% else %}Cadastrar atleta{% endif %}
@@ -121,4 +163,25 @@
         </form>
     </div>
 </div>
+
+<script>
+    // toggle RG / CPF
+    const tipoSelect = document.getElementById('tipo_documento');
+    const rgInput = document.getElementById('rg');
+    const cpfInput = document.getElementById('cpf');
+
+    if (tipoSelect && rgInput && cpfInput) {
+        function atualizarDocumento() {
+            if (tipoSelect.value === 'rg') {
+                rgInput.style.display = '';
+                cpfInput.style.display = 'none';
+            } else {
+                rgInput.style.display = 'none';
+                cpfInput.style.display = '';
+            }
+        }
+        atualizarDocumento();
+        tipoSelect.addEventListener('change', atualizarDocumento);
+    }
+</script>
 {% endblock %}

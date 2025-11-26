@@ -1,122 +1,132 @@
-# routes/atletas_routes.py
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
 from flask_login import login_required
-from datetime import datetime, date
-
 from extensions import db
-from models import Atleta, Grupo, Plano, AtletaGrupo, AtletaPlano
+from models import Atleta, Grupo, AtletaGrupo, AtletaFoto
+from datetime import datetime
+import os
+import base64
+from werkzeug.utils import secure_filename
 
 atletas_bp = Blueprint('atletas', __name__, url_prefix='/atletas')
+
+
+def salvar_foto_base64(foto_base64, atleta_id):
+    """
+    Recebe uma string base64 "data:image/jpeg;base64,...."
+    e salva em static/fotos_atletas/, criando um registro em AtletaFoto.
+    """
+    if not foto_base64:
+        return
+
+    try:
+        header, data = foto_base64.split(',', 1)
+    except ValueError:
+        return
+
+    try:
+        img_bytes = base64.b64decode(data)
+    except Exception:
+        return
+
+    upload_dir = os.path.join(current_app.root_path, 'static', 'fotos_atletas')
+    os.makedirs(upload_dir, exist_ok=True)
+
+    filename = f"atleta_{atleta_id}_{int(datetime.utcnow().timestamp())}.jpg"
+    filepath = os.path.join(upload_dir, secure_filename(filename))
+
+    with open(filepath, 'wb') as f:
+        f.write(img_bytes)
+
+    rel_path = f"fotos_atletas/{filename}"
+    foto = AtletaFoto(atleta_id=atleta_id, foto_path=rel_path)
+    db.session.add(foto)
 
 
 @atletas_bp.route('/listar')
 @login_required
 def listar():
-    """
-    Lista de atletas com filtros:
-    - nome (contém)
-    - idade mínima / máxima
-    - status (ATIVO / INATIVO / TODOS)
-    """
-    nome = (request.args.get('nome') or '').strip()
-    idade_min = request.args.get('idade_min', type=int)
-    idade_max = request.args.get('idade_max', type=int)
-    status = request.args.get('status') or 'TODOS'
-
-    query = Atleta.query
-
-    if status in ('ATIVO', 'INATIVO'):
-        query = query.filter(Atleta.status == status)
-
-    if nome:
-        query = query.filter(Atleta.nome.ilike(f'%{nome}%'))
-
-    hoje = date.today()
-
-    # filtro por idade -> convertemos idade para intervalo de datas
-    if idade_min is not None:
-        ano_max = hoje.year - idade_min
-        data_max = date(ano_max, 12, 31)
-        query = query.filter(Atleta.data_nascimento <= data_max)
-
-    if idade_max is not None:
-        ano_min = hoje.year - idade_max
-        data_min = date(ano_min, 1, 1)
-        query = query.filter(Atleta.data_nascimento >= data_min)
-
-    atletas = query.order_by(Atleta.nome).all()
-
-    # calcula idade em Python e anexa no objeto
-    for a in atletas:
-        if a.data_nascimento:
-            idade = hoje.year - a.data_nascimento.year
-            if (hoje.month, hoje.day) < (a.data_nascimento.month, a.data_nascimento.day):
-                idade -= 1
-            a.idade = idade
-        else:
-            a.idade = None
-
-    filtros = {
-        'nome': nome,
-        'idade_min': idade_min if idade_min is not None else '',
-        'idade_max': idade_max if idade_max is not None else '',
-        'status': status,
-    }
-
-    return render_template('atletas_listar.html', atletas=atletas, filtros=filtros)
+    # no futuro aqui a gente filtra por escolinha e por responsável
+    atletas = Atleta.query.order_by(Atleta.nome).all()
+    return render_template('atletas_listar.html', atletas=atletas)
 
 
 @atletas_bp.route('/novo', methods=['GET', 'POST'])
 @login_required
 def novo():
     grupos = Grupo.query.order_by(Grupo.nome).all()
-    planos = Plano.query.order_by(Plano.nome).all()
 
     if request.method == 'POST':
         nome = (request.form.get('nome') or '').strip()
         dn = request.form.get('data_nascimento')
         posicao = (request.form.get('posicao') or '').strip() or None
+
         rg = (request.form.get('rg') or '').strip() or None
         cpf = (request.form.get('cpf') or '').strip() or None
+
         telefone = (request.form.get('telefone') or '').strip() or None
-        validade_atestado = request.form.get('validade_atestado') or None
+        validade_atestado_str = request.form.get('validade_atestado') or None
         info_adicionais = (request.form.get('informacoes_adicionais') or '').strip() or None
+
+        resp_nome = (request.form.get('responsavel_nome') or '').strip() or None
+        resp_cpf = (request.form.get('responsavel_cpf') or '').strip() or None
+        resp_tel = (request.form.get('responsavel_telefone') or '').strip() or None
+        resp_parentesco = (request.form.get('responsavel_parentesco') or '').strip() or None
+
+        grupos_ids = request.form.getlist('grupos_ids')
+        foto_base64 = request.form.get('foto_base64')
 
         if not nome or not dn:
             flash('Preencha nome e data de nascimento.', 'danger')
             return redirect(url_for('atletas.novo'))
 
+        try:
+            data_nasc = datetime.strptime(dn, '%Y-%m-%d').date()
+        except ValueError:
+            flash('Data de nascimento inválida.', 'danger')
+            return redirect(url_for('atletas.novo'))
+
+        validade_atestado = None
+        if validade_atestado_str:
+            try:
+                validade_atestado = datetime.strptime(validade_atestado_str, '%Y-%m-%d').date()
+            except ValueError:
+                flash('Data de validade do atestado inválida.', 'danger')
+                return redirect(url_for('atletas.novo'))
+
         atleta = Atleta(
             nome=nome,
-            data_nascimento=datetime.strptime(dn, '%Y-%m-%d').date(),
+            data_nascimento=data_nasc,
             posicao=posicao,
             rg=rg,
             cpf=cpf,
             telefone=telefone,
-            validade_atestado=datetime.strptime(validade_atestado, '%Y-%m-%d').date()
-            if validade_atestado else None,
+            validade_atestado=validade_atestado,
             informacoes_adicionais=info_adicionais,
+            responsavel_nome=resp_nome,
+            responsavel_cpf=resp_cpf,
+            responsavel_telefone=resp_tel,
+            responsavel_parentesco=resp_parentesco,
             status='ATIVO'
         )
-        db.session.add(atleta)
-        db.session.flush()  # para pegar atleta.id
 
-        # vínculos com grupos
-        grupos_ids = request.form.getlist('grupos_ids')
+        db.session.add(atleta)
+        db.session.flush()  # precisa do id
+
+        # vincula grupos
         for gid in grupos_ids:
             if gid:
-                db.session.add(AtletaGrupo(atleta_id=atleta.id, grupo_id=int(gid), ativo=True))
+                ag = AtletaGrupo(atleta_id=atleta.id, grupo_id=int(gid), ativo=True)
+                db.session.add(ag)
 
-        # vínculo com plano
-        plano_id = request.form.get('plano_id', type=int)
-        if plano_id:
-            db.session.add(AtletaPlano(atleta_id=atleta.id, plano_id=plano_id, ativo=True))
+        # salva foto se existir
+        if foto_base64:
+            salvar_foto_base64(foto_base64, atleta.id)
 
         db.session.commit()
         flash('Atleta cadastrado com sucesso!', 'success')
         return redirect(url_for('atletas.listar'))
 
-    return render_template('atletas_novo.html', atleta=None, grupos=grupos, planos=planos)
+    return render_template('atletas_novo.html', atleta=None, grupos=grupos)
 
 
 @atletas_bp.route('/<int:atleta_id>/editar', methods=['GET', 'POST'])
@@ -124,60 +134,83 @@ def novo():
 def editar(atleta_id):
     atleta = Atleta.query.get_or_404(atleta_id)
     grupos = Grupo.query.order_by(Grupo.nome).all()
-    planos = Plano.query.order_by(Plano.nome).all()
+    grupos_do_atleta = {ag.grupo_id for ag in atleta.grupos}
 
     if request.method == 'POST':
         nome = (request.form.get('nome') or '').strip()
         dn = request.form.get('data_nascimento')
         posicao = (request.form.get('posicao') or '').strip() or None
+
         rg = (request.form.get('rg') or '').strip() or None
         cpf = (request.form.get('cpf') or '').strip() or None
+
         telefone = (request.form.get('telefone') or '').strip() or None
-        validade_atestado = request.form.get('validade_atestado') or None
+        validade_atestado_str = request.form.get('validade_atestado') or None
         info_adicionais = (request.form.get('informacoes_adicionais') or '').strip() or None
-        status = request.form.get('status') or 'ATIVO'
+
+        resp_nome = (request.form.get('responsavel_nome') or '').strip() or None
+        resp_cpf = (request.form.get('responsavel_cpf') or '').strip() or None
+        resp_tel = (request.form.get('responsavel_telefone') or '').strip() or None
+        resp_parentesco = (request.form.get('responsavel_parentesco') or '').strip() or None
+
+        grupos_ids = request.form.getlist('grupos_ids')
+        foto_base64 = request.form.get('foto_base64')
+        status = request.form.get('status') or atleta.status
 
         if not nome or not dn:
             flash('Preencha nome e data de nascimento.', 'danger')
             return redirect(url_for('atletas.editar', atleta_id=atleta.id))
 
+        try:
+            data_nasc = datetime.strptime(dn, '%Y-%m-%d').date()
+        except ValueError:
+            flash('Data de nascimento inválida.', 'danger')
+            return redirect(url_for('atletas.editar', atleta_id=atleta.id))
+
+        validade_atestado = None
+        if validade_atestado_str:
+            try:
+                validade_atestado = datetime.strptime(validade_atestado_str, '%Y-%m-%d').date()
+            except ValueError:
+                flash('Data de validade do atestado inválida.', 'danger')
+                return redirect(url_for('atletas.editar', atleta_id=atleta.id))
+
         atleta.nome = nome
-        atleta.data_nascimento = datetime.strptime(dn, '%Y-%m-%d').date()
+        atleta.data_nascimento = data_nasc
         atleta.posicao = posicao
         atleta.rg = rg
         atleta.cpf = cpf
         atleta.telefone = telefone
-        atleta.validade_atestado = datetime.strptime(validade_atestado, '%Y-%m-%d').date() \
-            if validade_atestado else None
+        atleta.validade_atestado = validade_atestado
         atleta.informacoes_adicionais = info_adicionais
+        atleta.responsavel_nome = resp_nome
+        atleta.responsavel_cpf = resp_cpf
+        atleta.responsavel_telefone = resp_tel
+        atleta.responsavel_parentesco = resp_parentesco
         atleta.status = status
 
-        # atualiza grupos
+        # atualizar grupos
         AtletaGrupo.query.filter_by(atleta_id=atleta.id).delete()
-        grupos_ids = request.form.getlist('grupos_ids')
         for gid in grupos_ids:
             if gid:
-                db.session.add(AtletaGrupo(atleta_id=atleta.id, grupo_id=int(gid), ativo=True))
+                ag = AtletaGrupo(atleta_id=atleta.id, grupo_id=int(gid), ativo=True)
+                db.session.add(ag)
 
-        # atualiza plano (mantendo um plano ativo só para simplificar)
-        AtletaPlano.query.filter_by(atleta_id=atleta.id).delete()
-        plano_id = request.form.get('plano_id', type=int)
-        if plano_id:
-            db.session.add(AtletaPlano(atleta_id=atleta.id, plano_id=plano_id, ativo=True))
+        # nova foto (se enviada)
+        if foto_base64:
+            salvar_foto_base64(foto_base64, atleta.id)
 
         db.session.commit()
         flash('Dados do atleta atualizados!', 'success')
         return redirect(url_for('atletas.listar'))
 
-    # pré-seleção de grupos e plano
-    grupos_ids_do_atleta = {ag.grupo_id for ag in atleta.grupos}
-    plano_atual = atleta.planos[0].plano_id if atleta.planos else None
+    # pega última foto (se existir)
+    foto_atual = atleta.fotos[-1].foto_path if atleta.fotos else None
 
     return render_template(
         'atletas_novo.html',
         atleta=atleta,
         grupos=grupos,
-        planos=planos,
-        grupos_ids_do_atleta=grupos_ids_do_atleta,
-        plano_atual=plano_atual
+        grupos_do_atleta=grupos_do_atleta,
+        foto_atual=foto_atual
     )
