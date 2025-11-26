@@ -7,95 +7,105 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-<header class="navbar">
-    <a href="{{ url_for('dashboard.index') }}" class="navbar-brand">
-        <span class="navbar-brand-logo">EA</span>
-        <span>Escolinha Aurora Tech</span>
-    </a>
+{% if request.endpoint != 'auth.login' %}
+<div class="app-shell">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div>
+            <div class="sidebar-logo">
+                <div class="sidebar-logo-icon">EA</div>
+                <div class="sidebar-logo-text">
+                    <span class="sidebar-logo-title">
+                        {% if current_user.escolinha_nome %}
+                            {{ current_user.escolinha_nome }}
+                        {% else %}
+                            Escolinha Aurora Tech
+                        {% endif %}
+                    </span>
+                    <span class="sidebar-logo-subtitle">Portal do Aluno e Gestão</span>
+                </div>
+            </div>
 
-    {% set endpoint = request.endpoint or '' %}
+            <ul class="sidebar-nav">
+                {% set ep = request.endpoint or '' %}
 
-    <nav>
-        {% if current_user.is_authenticated %}
-        <ul class="navbar-nav">
-            {# ADMIN vê tudo #}
-            {% if current_user.role == 'ADMIN' %}
-                <li><a class="nav-link {% if endpoint.startswith('dashboard') %}active{% endif %}"
-                       href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+                <li><a href="{{ url_for('dashboard.index') }}"
+                       class="{% if ep.startswith('dashboard') %}active{% endif %}">
+                    <span class="icon">🏠</span> Visão Geral
+                </a></li>
 
-                <li><a class="nav-link {% if endpoint.startswith('atletas') %}active{% endif %}"
-                       href="{{ url_for('atletas.listar') }}">Atletas</a></li>
+                <li><a href="{{ url_for('atletas.listar') }}"
+                       class="{% if ep.startswith('atletas') %}active{% endif %}">
+                    <span class="icon">👨‍👩‍👦</span> Alunos & Responsáveis
+                </a></li>
 
-                <li><a class="nav-link {% if endpoint.startswith('grupos') %}active{% endif %}"
-                       href="{{ url_for('grupos.listar') }}">Grupos</a></li>
+                <li><a href="{{ url_for('grupos.listar') }}"
+                       class="{% if ep.startswith('grupos') %}active{% endif %}">
+                    <span class="icon">👥</span> Grupos
+                </a></li>
 
-                <li><a class="nav-link {% if endpoint.startswith('atividades') %}active{% endif %}"
-                       href="{{ url_for('atividades.listar') }}">Agenda</a></li>
+                <li><a href="{{ url_for('planos.listar') }}"
+                       class="{% if ep.startswith('planos') %}active{% endif %}">
+                    <span class="icon">🎫</span> Planos
+                </a></li>
 
-                <li><a class="nav-link {% if endpoint.startswith('financeiro') %}active{% endif %}"
-                       href="{{ url_for('financeiro.resumo') }}">Financeiro</a></li>
+                <li><a href="{{ url_for('atividades.agenda') }}"
+                       class="{% if ep.startswith('atividades') %}active{% endif %}">
+                    <span class="icon">📅</span> Agenda
+                </a></li>
 
-                <li><a class="nav-link {% if endpoint.startswith('planos') %}active{% endif %}"
-                       href="{{ url_for('planos.listar') }}">Planos</a></li>
-            {% elif current_user.role == 'COACH' %}
-                {# PROFESSOR: sem financeiro/planos #}
-                <li><a class="nav-link {% if endpoint.startswith('dashboard') %}active{% endif %}"
-                       href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+                <li><a href="{{ url_for('financeiro.fluxo_caixa') }}"
+                       class="{% if ep.startswith('financeiro') %}active{% endif %}">
+                    <span class="icon">💰</span> Fluxo de Caixa
+                </a></li>
 
-                <li><a class="nav-link {% if endpoint.startswith('atletas') %}active{% endif %}"
-                       href="{{ url_for('atletas.listar') }}">Atletas</a></li>
+                <li><a href="{{ url_for('usuarios_sistema.listar') }}"
+                       class="{% if ep.startswith('usuarios_sistema') %}active{% endif %}">
+                    <span class="icon">🧑‍💻</span> Usuários do Sistema
+                </a></li>
 
-                <li><a class="nav-link {% if endpoint.startswith('grupos') %}active{% endif %}"
-                       href="{{ url_for('grupos.listar') }}">Grupos</a></li>
-
-                <li><a class="nav-link {% if endpoint.startswith('atividades') %}active{% endif %}"
-                       href="{{ url_for('atividades.listar') }}">Agenda</a></li>
-            {% elif current_user.role == 'PARENT' %}
-                {# RESPONSÁVEL: foca em filho(s) #}
-                <li><a class="nav-link {% if endpoint.startswith('dashboard') %}active{% endif %}"
-                       href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
-
-                <li><a class="nav-link {% if endpoint.startswith('atletas') %}active{% endif %}"
-                       href="{{ url_for('atletas.listar') }}">Atletas</a></li>
-
-                <li><a class="nav-link {% if endpoint.startswith('atividades') %}active{% endif %}"
-                       href="{{ url_for('atividades.listar') }}">Agenda</a></li>
-
-                <li><a class="nav-link {% if endpoint.startswith('financeiro') %}active{% endif %}"
-                       href="{{ url_for('financeiro.resumo_responsavel') }}">Financeiro</a></li>
-            {% endif %}
-        </ul>
-        {% endif %}
-    </nav>
-
-    <div class="navbar-user">
-        {% if current_user.is_authenticated %}
-            <span>{{ current_user.nome }}</span>
-            <span class="navbar-user-role">{{ current_user.role }}</span>
-            <a href="{{ url_for('auth.logout') }}" class="btn btn-outline">Sair</a>
-        {% endif %}
-    </div>
-</header>
-
-<main class="main-container">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <div class="flash-container">
-          {% for category, message in messages %}
-            <div class="alert alert-{{ category }}">{{ message }}</div>
-          {% endfor %}
+                <li><a href="{{ url_for('ia.index') }}"
+                       class="{% if ep.startswith('ia') %}active{% endif %}">
+                    <span class="icon">🤖</span> IA Coach
+                </a></li>
+            </ul>
         </div>
-      {% endif %}
-    {% endwith %}
 
+        {% if current_user.is_authenticated %}
+        <div class="sidebar-user">
+            <div class="sidebar-user-info">
+                <span class="sidebar-user-name">{{ current_user.nome }}</span>
+                <span class="sidebar-user-role">{{ current_user.role }}</span>
+            </div>
+            <div>
+                <div class="sidebar-user-status-pill">
+                    ● Online
+                </div>
+                <form method="post" action="{{ url_for('auth.logout') }}" style="margin-top:0.35rem;">
+                    <button type="submit" class="btn btn-sm btn-outline">Sair</button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div style="margin-bottom:0.75rem;">
+              {% for category, message in messages %}
+                <div class="badge badge-{{ 'danger' if category == 'error' else 'neutral' }}">{{ message }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+</div>
+{% else %}
     {% block content %}{% endblock %}
-</main>
-
-<footer class="footer">
-    Aurora Tech · Plataforma de Gestão de Escolinhas de Futebol · 2025
-</footer>
-
-<script src="{{ url_for('static', filename='js/camera.js') }}"></script>
-{% block scripts %}{% endblock %}
+{% endif %}
 </body>
 </html>

@@ -1,45 +1,60 @@
 {% extends "base.html" %}
-{% block title %}Dashboard · Admin{% endblock %}
+{% block title %}Visão Geral{% endblock %}
 
 {% block content %}
-<div class="page-header">
+
+<div class="main-header">
     <div>
-        <h1 class="page-title">Bem-vindo ao Painel Administrativo</h1>
-        <p class="page-subtitle">Gerencie as operações da escolinha a partir deste painel.</p>
+        <h1 class="page-title">Visão Geral</h1>
+        <p class="page-subtitle">Resumo rápido da situação da escolinha.</p>
     </div>
 </div>
 
 <div class="stats-grid">
-    <a href="{{ url_for('atletas.listar', status='ATIVO') }}" class="stat-card-link">
-        <div class="stat-card">
-            <div class="stat-label">Atletas Ativos</div>
-            <div class="stat-value">{{ total_atletas }}</div>
-            <div class="stat-pill">Jogadores com status ATIVO</div>
-        </div>
-    </a>
+    <div class="stat-card">
+        <div class="stat-label">Alunos Ativos</div>
+        <div class="stat-value">{{ total_atletas_ativos }}</div>
+        <div class="stat-meta">Alunos com matrícula ativa.</div>
+    </div>
 
-    <a href="{{ url_for('financeiro.resumo', inadimplentes=1) }}" class="stat-card-link">
-        <div class="stat-card">
-            <div class="stat-label">Atletas inadimplentes</div>
-            <div class="stat-value">{{ inadimplentes }}</div>
-            <div class="stat-pill">Com mensalidades pendentes/atrasadas</div>
-        </div>
-    </a>
+    <div class="stat-card" style="border-left:4px solid #22c55e;">
+        <div class="stat-label">Receita Total (Paga)</div>
+        <div class="stat-value">R$ {{ '%.2f'|format(receita_paga or 0) }}</div>
+        <div class="stat-meta">Somente mensalidades pagas.</div>
+    </div>
 
-    <a href="{{ url_for('financeiro.resumo', status='PENDENTE') }}" class="stat-card-link">
-        <div class="stat-card">
-            <div class="stat-label">Saldo a receber</div>
-            <div class="stat-value">R$ {{ '%.2f'|format(saldo) }}</div>
-            <div class="stat-pill">Total de mensalidades abertas</div>
+    <div class="stat-card" style="border-left:4px solid #f97316;">
+        <div class="stat-label">Doc. pendente</div>
+        <div class="stat-value">{{ documentos_pendentes }}</div>
+        <div class="stat-meta">
+            <a href="{{ url_for('atletas.listar', docs='pendente') }}">Ver</a>
         </div>
-    </a>
+    </div>
 
-    <a href="{{ url_for('atletas.listar') }}" class="stat-card-link">
-        <div class="stat-card">
-            <div class="stat-label">Aniversariantes do mês</div>
-            <div class="stat-value">{{ aniversariantes }}</div>
-            <div class="stat-pill">Atletas que fazem aniversário este mês</div>
+    <div class="stat-card" style="border-left:4px solid #ef4444;">
+        <div class="stat-label">Alunos inadimplentes</div>
+        <div class="stat-value">{{ qtd_inadimplentes }}</div>
+        <div class="stat-meta">
+            <a href="{{ url_for('financeiro.resumo', filtro='inadimplente') }}">Ver todos</a>
         </div>
-    </a>
+    </div>
 </div>
+
+<div class="card">
+    <div class="card-header">
+        <div>
+            <div class="card-title">Próximo treino</div>
+            <div class="card-subtitle">Atividade mais próxima na agenda.</div>
+        </div>
+    </div>
+    {% if proxima_atividade %}
+        <p><strong>{{ proxima_atividade.titulo }}</strong></p>
+        <p>{{ proxima_atividade.data.strftime('%d/%m/%Y') }} ·
+           {{ proxima_atividade.hora_inicio.strftime('%H:%M') }} ·
+           {{ proxima_atividade.grupo.nome if proxima_atividade.grupo }}</p>
+    {% else %}
+        <p>Nenhum treino agendado para os próximos dias.</p>
+    {% endif %}
+</div>
+
 {% endblock %}

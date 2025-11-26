@@ -1,92 +1,128 @@
 {% extends "base.html" %}
-{% block title %}Atletas{% endblock %}
+{% block title %}Alunos & Responsáveis{% endblock %}
 
 {% block content %}
-<div class="page-header">
+<div class="main-header">
     <div>
-        <h1 class="page-title">Atletas</h1>
-        <p class="page-subtitle">Liste e filtre os atletas cadastrados.</p>
+        <h1 class="page-title">Gestão de Alunos</h1>
+        <p class="page-subtitle">Alunos e responsáveis da escolinha.</p>
     </div>
-    <a href="{{ url_for('atletas.novo') }}" class="btn btn-primary">+ Novo atleta</a>
-</div>
 
-<div class="card">
-    <div class="card-body">
-        <form method="get" class="filter-bar">
-            <div class="form-group inline">
-                <label for="nome">Nome</label>
-                <input type="text" id="nome" name="nome" value="{{ filtros.nome }}">
-            </div>
-
-            <div class="form-group inline">
-                <label for="idade_min">Idade mínima</label>
-                <input type="number" id="idade_min" name="idade_min" min="0"
-                       value="{{ filtros.idade_min }}">
-            </div>
-
-            <div class="form-group inline">
-                <label for="idade_max">Idade máxima</label>
-                <input type="number" id="idade_max" name="idade_max" min="0"
-                       value="{{ filtros.idade_max }}">
-            </div>
-
-            <div class="form-group inline">
-                <label for="status">Status</label>
-                <select id="status" name="status">
-                    <option value="TODOS" {% if filtros.status == 'TODOS' %}selected{% endif %}>Todos</option>
-                    <option value="ATIVO" {% if filtros.status == 'ATIVO' %}selected{% endif %}>Ativo</option>
-                    <option value="INATIVO" {% if filtros.status == 'INATIVO' %}selected{% endif %}>Inativo</option>
-                </select>
-            </div>
-
-            <button type="submit" class="btn btn-outline">Filtrar</button>
-        </form>
+    <div class="main-header-actions">
+        <a href="#" class="btn btn-outline">Modelo</a>
+        <a href="#" class="btn btn-secondary">Importar</a>
+        <a href="#" class="btn btn-secondary">Exportar</a>
+        <a href="#" class="btn btn-outline">PDF</a>
+        <a href="{{ url_for('atletas.novo') }}" class="btn btn-primary">+ Novo Aluno</a>
     </div>
 </div>
 
 <div class="card">
-    <div class="card-body">
-        {% if atletas %}
-        <table class="table table-striped">
+    <div class="list-header">
+        <div class="list-filters">
+            <input class="input" type="text" name="q"
+                   placeholder="Buscar por aluno ou responsável..."
+                   value="{{ filtros.q or '' }}">
+            <select class="select" name="idade">
+                <option value="">Idade: Todos</option>
+                <option value="0-10">0-10 anos</option>
+                <option value="11-15">11-15 anos</option>
+                <option value="16-99">16+ anos</option>
+            </select>
+            <select class="select" name="status">
+                <option value="">Status: Todos</option>
+                <option value="ATIVO" {% if filtros.status == 'ATIVO' %}selected{% endif %}>Ativo</option>
+                <option value="INATIVO" {% if filtros.status == 'INATIVO' %}selected{% endif %}>Inativo</option>
+            </select>
+            <select class="select" name="financeiro">
+                <option value="">Financeiro: Todos</option>
+                <option value="ok" {% if filtros.financeiro == 'ok' %}selected{% endif %}>Em dia</option>
+                <option value="pendente" {% if filtros.financeiro == 'pendente' %}selected{% endif %}>Pendente</option>
+            </select>
+            <select class="select" name="docs">
+                <option value="">Docs: Todos</option>
+                <option value="ok" {% if filtros.docs == 'ok' %}selected{% endif %}>OK</option>
+                <option value="pendente" {% if filtros.docs == 'pendente' %}selected{% endif %}>Pendentes</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="table-wrapper">
+        <table class="table">
             <thead>
             <tr>
-                <th>Nome</th>
+                <th>Aluno</th>
                 <th>Idade</th>
-                <th>Nascimento</th>
-                <th>Posição</th>
+                <th>Grupo</th>
+                <th>Responsável</th>
                 <th>Status</th>
-                <th style="width: 1%;">&nbsp;</th>
+                <th style="width:1%;">&nbsp;</th>
             </tr>
             </thead>
             <tbody>
-            {% for a in atletas %}
+            {% if atletas %}
+                {% for a in atletas %}
                 <tr>
                     <td>
-                        <a href="{{ url_for('atletas.editar', atleta_id=a.id) }}" class="link-plain">
-                            {{ a.nome }}
-                        </a>
+                        <strong>
+                            <a href="{{ url_for('atletas.detalhar', atleta_id=a.id) }}">
+                                {{ a.nome }}
+                            </a>
+                        </strong><br>
+                        <span style="font-size:0.8rem;color:#6b7280;">
+                            Tel: {{ a.telefone or a.telefone_residencial or '-' }}
+                        </span>
                     </td>
-                    <td>{{ a.idade if a.idade is not none else '-' }}</td>
-                    <td>{{ a.data_nascimento.strftime('%d/%m/%Y') }}</td>
-                    <td>{{ a.posicao or '-' }}</td>
+                    <td>{{ a.idade_anos or '-' }} anos</td>
                     <td>
-                        {% if a.status == 'ATIVO' %}
-                            <span class="badge badge-success">ATIVO</span>
+                        {% if a.grupos %}
+                            {% for g in a.grupos %}
+                                <span class="badge badge-neutral">{{ g.nome }}</span>
+                            {% endfor %}
                         {% else %}
-                            <span class="badge badge-muted">INATIVO</span>
+                            -
                         {% endif %}
                     </td>
                     <td>
-                        <a href="{{ url_for('atletas.editar', atleta_id=a.id) }}"
-                           class="btn btn-outline btn-sm">Editar</a>
+                        {% if a.responsavel_nome %}
+                            {{ a.responsavel_nome }}<br>
+                            <span style="font-size:0.8rem;color:#6b7280;">
+                                {{ a.responsavel_telefone or '' }}
+                            </span>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if a.status == 'ATIVO' %}
+                            <span class="badge badge-success">Ativo</span>
+                        {% else %}
+                            <span class="badge badge-neutral">Inativo</span>
+                        {% endif %}
+                        {% if a.tem_pend_financeira %}
+                            <span class="badge badge-danger">1 Pendente</span>
+                        {% endif %}
+                        {% if a.docs_pendentes %}
+                            <span class="badge badge-warning">DOC</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <!-- WhatsApp cobrança -->
+                        {% if a.responsavel_telefone %}
+                        <a class="btn btn-sm btn-outline"
+                           href="https://wa.me/55{{ a.responsavel_telefone|replace('(','')|replace(')','')|replace('-','')|replace(' ','') }}"
+                           target="_blank">
+                            💬
+                        </a>
+                        {% endif %}
                     </td>
                 </tr>
-            {% endfor %}
+                {% endfor %}
+            {% else %}
+                <tr><td colspan="6">Nenhum aluno encontrado.</td></tr>
+            {% endif %}
             </tbody>
         </table>
-        {% else %}
-            <p class="empty-state">Nenhum atleta encontrado com os filtros atuais.</p>
-        {% endif %}
     </div>
 </div>
 {% endblock %}
