@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Usuários do Sistema{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Usuários do Sistema</h1>
+        <p class="page-subtitle">
+            Controle de acesso de admins, professores e responsáveis.
+        </p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if usuarios %}
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Nome</th>
+                <th>E-mail</th>
+                <th>Perfil</th>
+                <th>Status</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for u in usuarios %}
+            <tr>
+                <td>{{ u.nome }}</td>
+                <td>{{ u.email }}</td>
+                <td>{{ u.role }}</td>
+                <td>
+                    {% if u.ativo %}
+                        <span class="badge badge-success">Ativo</span>
+                    {% else %}
+                        <span class="badge badge-neutral">Inativo</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <p class="empty-state">Nenhum usuário encontrado.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

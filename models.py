@@ -2,19 +2,28 @@ from extensions import db
 from flask_login import UserMixin
 from datetime import datetime, date
 
+
 # =========================
 # USUÁRIOS & RESPONSÁVEIS
 # =========================
 
+
 class Usuario(db.Model, UserMixin):
-    __tablename__ = 'usuarios'
+    __tablename__ = "usuarios"
 
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(150), nullable=False)
     email = db.Column(db.String(150), unique=True, nullable=False)
     senha_hash = db.Column(db.String(255), nullable=False)
     telefone = db.Column(db.String(30))
-    role = db.Column(db.Enum('ADMIN', 'COACH', 'PARENT'), nullable=False, default='PARENT')
+
+    # SUPER_ADMIN adicionado aqui
+    role = db.Column(
+        db.Enum("ADMIN", "COACH", "PARENT", "SUPER_ADMIN"),
+        nullable=False,
+        default="PARENT",
+    )
+
     ativo = db.Column(db.Boolean, default=True)
     criado_em = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -22,10 +31,18 @@ class Usuario(db.Model, UserMixin):
 
 
 class Responsavel(db.Model):
-    __tablename__ = 'responsaveis'
+    __tablename__ = "responsaveis"
 
     id = db.Column(db.Integer, primary_key=True)
-    usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
+
+    # pode existir responsável CADASTRADO, mas ainda sem usuário criado
+    usuario_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=True)
+
+    # Campos usados nas rotas de cadastro/login de responsável
+    nome = db.Column(db.String(150))
+    cpf = db.Column(db.String(14), unique=True)
+    telefone = db.Column(db.String(30))
+
     observacoes = db.Column(db.String(255))
 
     atletas = db.relationship("AtletaResponsavel", back_populates="responsavel")
@@ -35,8 +52,9 @@ class Responsavel(db.Model):
 # ATLETAS
 # =========================
 
+
 class Atleta(db.Model):
-    __tablename__ = 'atletas'
+    __tablename__ = "atletas"
 
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(150), nullable=False)
@@ -48,7 +66,7 @@ class Atleta(db.Model):
     data_nascimento = db.Column(db.Date, nullable=False)
     posicao = db.Column(db.String(50))
 
-    documento = db.Column(db.String(50))  # pode continuar usando se quiser algo genérico
+    documento = db.Column(db.String(50))  # genérico
     telefone_residencial = db.Column(db.String(30))
 
     telefone = db.Column(db.String(30))
@@ -61,7 +79,7 @@ class Atleta(db.Model):
     responsavel_telefone = db.Column(db.String(30))
     responsavel_parentesco = db.Column(db.String(50))
 
-    status = db.Column(db.Enum('ATIVO', 'INATIVO'), default='ATIVO')
+    status = db.Column(db.Enum("ATIVO", "INATIVO"), default="ATIVO")
     criado_em = db.Column(db.DateTime, default=datetime.utcnow)
 
     fotos = db.relationship("AtletaFoto", backref="atleta", lazy=True)
@@ -70,23 +88,55 @@ class Atleta(db.Model):
     planos = db.relationship("AtletaPlano", back_populates="atleta")
     financeiro = db.relationship("ContaReceber", backref="atleta", lazy=True)
 
+    # ---- helpers para telas ----
+
+    @property
+    def idade_anos(self):
+        if not self.data_nascimento:
+            return None
+        hoje = date.today()
+        anos = hoje.year - self.data_nascimento.year
+        if (hoje.month, hoje.day) < (self.data_nascimento.month, self.data_nascimento.day):
+            anos -= 1
+        return anos
+
+    @property
+    def tem_pend_financeira(self):
+        # True se tiver alguma conta pendente ou atrasada
+        if not self.financeiro:
+            return False
+        for c in self.financeiro:
+            if c.status in ("PENDENTE", "ATRASADO"):
+                return True
+        return False
+
+    @property
+    def docs_pendentes(self):
+        """
+        Placeholder simples: considera documento pendente se não tiver validade
+        de atestado ou se a data já venceu.
+        (Depois você pode sofisticar isso com checkboxes por tipo de documento.)
+        """
+        if not self.validade_atestado:
+            return True
+        return self.validade_atestado < date.today()
 
 
 class AtletaFoto(db.Model):
-    __tablename__ = 'atletas_fotos'
+    __tablename__ = "atletas_fotos"
 
     id = db.Column(db.Integer, primary_key=True)
-    atleta_id = db.Column(db.Integer, db.ForeignKey('atletas.id'), nullable=False)
+    atleta_id = db.Column(db.Integer, db.ForeignKey("atletas.id"), nullable=False)
     foto_path = db.Column(db.String(255), nullable=False)
     criado_em = db.Column(db.DateTime, default=datetime.utcnow)
 
 
 class AtletaResponsavel(db.Model):
-    __tablename__ = 'atletas_responsaveis'
+    __tablename__ = "atletas_responsaveis"
 
     id = db.Column(db.Integer, primary_key=True)
-    atleta_id = db.Column(db.Integer, db.ForeignKey('atletas.id'), nullable=False)
-    responsavel_id = db.Column(db.Integer, db.ForeignKey('responsaveis.id'), nullable=False)
+    atleta_id = db.Column(db.Integer, db.ForeignKey("atletas.id"), nullable=False)
+    responsavel_id = db.Column(db.Integer, db.ForeignKey("responsaveis.id"), nullable=False)
     parentesco = db.Column(db.String(50))
 
     atleta = db.relationship("Atleta", back_populates="responsaveis")
@@ -97,8 +147,9 @@ class AtletaResponsavel(db.Model):
 # GRUPOS & PLANOS
 # =========================
 
+
 class Grupo(db.Model):
-    __tablename__ = 'grupos'
+    __tablename__ = "grupos"
 
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
@@ -111,11 +162,11 @@ class Grupo(db.Model):
 
 
 class AtletaGrupo(db.Model):
-    __tablename__ = 'atletas_grupos'
+    __tablename__ = "atletas_grupos"
 
     id = db.Column(db.Integer, primary_key=True)
-    atleta_id = db.Column(db.Integer, db.ForeignKey('atletas.id'), nullable=False)
-    grupo_id = db.Column(db.Integer, db.ForeignKey('grupos.id'), nullable=False)
+    atleta_id = db.Column(db.Integer, db.ForeignKey("atletas.id"), nullable=False)
+    grupo_id = db.Column(db.Integer, db.ForeignKey("grupos.id"), nullable=False)
     ativo = db.Column(db.Boolean, default=True)
 
     atleta = db.relationship("Atleta", back_populates="grupos")
@@ -123,19 +174,19 @@ class AtletaGrupo(db.Model):
 
 
 class Plano(db.Model):
-    __tablename__ = 'planos'
+    __tablename__ = "planos"
 
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
     valor_mensal = db.Column(db.Numeric(10, 2), nullable=False)
     dia_vencimento = db.Column(db.Integer, nullable=True)
     forma_pagamento_padrao = db.Column(
-        db.Enum('PIX', 'CREDITO', 'DEBITO', 'DINHEIRO'),
-        default='PIX'
+        db.Enum("PIX", "CREDITO", "DEBITO", "DINHEIRO"),
+        default="PIX",
     )
     periodicidade_cobranca = db.Column(
-        db.Enum('MENSAL', 'TRIMESTRAL', 'SEMESTRAL', 'ANUAL'),
-        default='MENSAL'
+        db.Enum("MENSAL", "TRIMESTRAL", "SEMESTRAL", "ANUAL"),
+        default="MENSAL",
     )
     descricao = db.Column(db.String(255))
     ativo = db.Column(db.Boolean, default=True)
@@ -144,11 +195,11 @@ class Plano(db.Model):
 
 
 class AtletaPlano(db.Model):
-    __tablename__ = 'atletas_planos'
+    __tablename__ = "atletas_planos"
 
     id = db.Column(db.Integer, primary_key=True)
-    atleta_id = db.Column(db.Integer, db.ForeignKey('atletas.id'), nullable=False)
-    plano_id = db.Column(db.Integer, db.ForeignKey('planos.id'), nullable=False)
+    atleta_id = db.Column(db.Integer, db.ForeignKey("atletas.id"), nullable=False)
+    plano_id = db.Column(db.Integer, db.ForeignKey("planos.id"), nullable=False)
     data_inicio = db.Column(db.Date, nullable=False, default=date.today)
     data_fim = db.Column(db.Date)
     ativo = db.Column(db.Boolean, default=True)
@@ -161,13 +212,14 @@ class AtletaPlano(db.Model):
 # ATIVIDADES & PRESENÇAS
 # =========================
 
+
 class Atividade(db.Model):
-    __tablename__ = 'atividades'
+    __tablename__ = "atividades"
 
     id = db.Column(db.Integer, primary_key=True)
     titulo = db.Column(db.String(150), nullable=False)
-    grupo_id = db.Column(db.Integer, db.ForeignKey('grupos.id'))
-    coach_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'))
+    grupo_id = db.Column(db.Integer, db.ForeignKey("grupos.id"))
+    coach_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"))
     data = db.Column(db.Date, nullable=False)
     hora_inicio = db.Column(db.Time, nullable=False)
     hora_fim = db.Column(db.Time)
@@ -178,19 +230,22 @@ class Atividade(db.Model):
 
 
 class Presenca(db.Model):
-    __tablename__ = 'presencas'
+    __tablename__ = "presencas"
 
     id = db.Column(db.Integer, primary_key=True)
-    atividade_id = db.Column(db.Integer, db.ForeignKey('atividades.id'), nullable=False)
-    atleta_id = db.Column(db.Integer, db.ForeignKey('atletas.id'), nullable=False)
-    status = db.Column(db.Enum('PRESENTE', 'AUSENTE', 'JUSTIFICADO'), nullable=False)
+    atividade_id = db.Column(db.Integer, db.ForeignKey("atividades.id"), nullable=False)
+    atleta_id = db.Column(db.Integer, db.ForeignKey("atletas.id"), nullable=False)
+    status = db.Column(
+        db.Enum("PRESENTE", "AUSENTE", "JUSTIFICADO"),
+        nullable=False,
+    )
     observacao = db.Column(db.String(255))
     registrado_em = db.Column(db.DateTime, default=datetime.utcnow)
 
     atleta = db.relationship("Atleta")
 
     __table_args__ = (
-        db.UniqueConstraint('atividade_id', 'atleta_id', name='uk_presenca_atividade_atleta'),
+        db.UniqueConstraint("atividade_id", "atleta_id", name="uk_presenca_atividade_atleta"),
     )
 
 
@@ -198,22 +253,23 @@ class Presenca(db.Model):
 # FINANCEIRO
 # =========================
 
+
 class ContaReceber(db.Model):
-    __tablename__ = 'contas_receber'
+    __tablename__ = "contas_receber"
 
     id = db.Column(db.Integer, primary_key=True)
-    atleta_id = db.Column(db.Integer, db.ForeignKey('atletas.id'))
+    atleta_id = db.Column(db.Integer, db.ForeignKey("atletas.id"))
     descricao = db.Column(db.String(255))
     competencia = db.Column(db.Date)
     vencimento = db.Column(db.Date, nullable=False)
     valor = db.Column(db.Numeric(10, 2), nullable=False)
     status = db.Column(
-        db.Enum('PENDENTE', 'PAGO', 'ATRASADO', 'CANCELADO'),
-        default='PENDENTE'
+        db.Enum("PENDENTE", "PAGO", "ATRASADO", "CANCELADO"),
+        default="PENDENTE",
     )
     metodo_pagamento = db.Column(
-        db.Enum('PIX', 'CREDITO', 'DEBITO', 'DINHEIRO', 'ISENTO'),
-        default='PIX'
+        db.Enum("PIX", "CREDITO", "DEBITO", "DINHEIRO", "ISENTO"),
+        default="PIX",
     )
     mercadopago_payment_id = db.Column(db.String(100))
     pago_em = db.Column(db.DateTime)
@@ -221,7 +277,7 @@ class ContaReceber(db.Model):
 
 
 class ContaPagar(db.Model):
-    __tablename__ = 'contas_pagar'
+    __tablename__ = "contas_pagar"
 
     id = db.Column(db.Integer, primary_key=True)
     fornecedor = db.Column(db.String(150), nullable=False)
@@ -229,22 +285,22 @@ class ContaPagar(db.Model):
     vencimento = db.Column(db.Date, nullable=False)
     valor = db.Column(db.Numeric(10, 2), nullable=False)
     status = db.Column(
-        db.Enum('PENDENTE', 'PAGO', 'ATRASADO', 'CANCELADO'),
-        default='PENDENTE'
+        db.Enum("PENDENTE", "PAGO", "ATRASADO", "CANCELADO"),
+        default="PENDENTE",
     )
     pago_em = db.Column(db.DateTime)
     criado_em = db.Column(db.DateTime, default=datetime.utcnow)
 
 
 class FluxoCaixa(db.Model):
-    __tablename__ = 'fluxo_caixa'
+    __tablename__ = "fluxo_caixa"
 
     id = db.Column(db.Integer, primary_key=True)
     data_movimento = db.Column(db.Date, nullable=False)
-    tipo = db.Column(db.Enum('ENTRADA', 'SAIDA'), nullable=False)
+    tipo = db.Column(db.Enum("ENTRADA", "SAIDA"), nullable=False)
     origem = db.Column(
-        db.Enum('MENSALIDADE', 'OUTRO_RECEBIMENTO', 'CONTA_PAGAR', 'AJUSTE'),
-        nullable=False
+        db.Enum("MENSALIDADE", "OUTRO_RECEBIMENTO", "CONTA_PAGAR", "AJUSTE"),
+        nullable=False,
     )
     referencia_id = db.Column(db.Integer)
     descricao = db.Column(db.String(255))
@@ -253,7 +309,7 @@ class FluxoCaixa(db.Model):
 
 
 class MpWebhookLog(db.Model):
-    __tablename__ = 'mp_webhook_logs'
+    __tablename__ = "mp_webhook_logs"
 
     id = db.Column(db.Integer, primary_key=True)
     evento = db.Column(db.String(50))

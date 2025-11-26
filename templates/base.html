@@ -1,111 +1,167 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <title>{% block title %}Escolinha Aurora Tech{% endblock %}</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+   <meta charset="UTF-8">
+   <title>{% block title %}Escolinha Aurora Tech{% endblock %}</title>
+   <meta name="viewport" content="width=device-width, initial-scale=1">
+   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
+
 {% if request.endpoint != 'auth.login' %}
 <div class="app-shell">
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-        <div>
-            <div class="sidebar-logo">
-                <div class="sidebar-logo-icon">EA</div>
-                <div class="sidebar-logo-text">
-                    <span class="sidebar-logo-title">
-                        {% if current_user.escolinha_nome %}
-                            {{ current_user.escolinha_nome }}
-                        {% else %}
-                            Escolinha Aurora Tech
-                        {% endif %}
-                    </span>
-                    <span class="sidebar-logo-subtitle">Portal do Aluno e Gestão</span>
-                </div>
-            </div>
+   <!-- SIDEBAR -->
+   <aside class="sidebar">
+       <div>
+           <div class="sidebar-logo">
+               <div class="sidebar-logo-icon">EA</div>
+               <div class="sidebar-logo-text">
+                   <span class="sidebar-logo-title">
+                       {% if current_user.is_authenticated and current_user.escolinha_nome %}
+                           {{ current_user.escolinha_nome }}
+                       {% else %}
+                           Escolinha Aurora Tech
+                       {% endif %}
+                   </span>
+                   <span class="sidebar-logo-subtitle">Portal do Aluno e Gestão</span>
+               </div>
+           </div>
 
-            <ul class="sidebar-nav">
-                {% set ep = request.endpoint or '' %}
+           {% if current_user.is_authenticated %}
+           {% set ep = request.endpoint or '' %}
+           {% set role = current_user.role or '' %}
 
-                <li><a href="{{ url_for('dashboard.index') }}"
-                       class="{% if ep.startswith('dashboard') %}active{% endif %}">
-                    <span class="icon">🏠</span> Visão Geral
-                </a></li>
+           <ul class="sidebar-nav">
+               <!-- Dashboard: todos -->
+               <li>
+                   <a href="{{ url_for('dashboard.index') }}"
+                      class="{% if ep.startswith('dashboard') %}active{% endif %}">
+                       <span class="icon">🏠</span> Visão Geral
+                   </a>
+               </li>
 
-                <li><a href="{{ url_for('atletas.listar') }}"
-                       class="{% if ep.startswith('atletas') %}active{% endif %}">
-                    <span class="icon">👨‍👩‍👦</span> Alunos & Responsáveis
-                </a></li>
+               <!-- Alunos & Responsáveis:
+                    - ADMIN, COACH, SUPER_ADMIN => gestão completa
+                    - PARENT => lista apenas dos filhos -->
+               {% if role in ['ADMIN', 'COACH', 'SUPER_ADMIN', 'PARENT'] %}
+               <li>
+                   <a href="{{ url_for('atletas.listar') }}"
+                      class="{% if ep.startswith('atletas') %}active{% endif %}">
+                       <span class="icon">👨‍👩‍👦</span> Alunos & Responsáveis
+                   </a>
+               </li>
+               {% endif %}
 
-                <li><a href="{{ url_for('grupos.listar') }}"
-                       class="{% if ep.startswith('grupos') %}active{% endif %}">
-                    <span class="icon">👥</span> Grupos
-                </a></li>
+               <!-- Grupos: só professor/admin/super -->
+               {% if role in ['ADMIN', 'COACH', 'SUPER_ADMIN'] %}
+               <li>
+                   <a href="{{ url_for('grupos.listar') }}"
+                      class="{% if ep.startswith('grupos') %}active{% endif %}">
+                       <span class="icon">👥</span> Grupos
+                   </a>
+               </li>
+               {% endif %}
 
-                <li><a href="{{ url_for('planos.listar') }}"
-                       class="{% if ep.startswith('planos') %}active{% endif %}">
-                    <span class="icon">🎫</span> Planos
-                </a></li>
+               <!-- Planos: apenas ADMIN / SUPER_ADMIN -->
+               {% if role in ['ADMIN', 'SUPER_ADMIN'] %}
+               <li>
+                   <a href="{{ url_for('planos.listar') }}"
+                      class="{% if ep.startswith('planos') %}active{% endif %}">
+                       <span class="icon">🎫</span> Planos
+                   </a>
+               </li>
+               {% endif %}
 
-                <li><a href="{{ url_for('atividades.agenda') }}"
-                       class="{% if ep.startswith('atividades') %}active{% endif %}">
-                    <span class="icon">📅</span> Agenda
-                </a></li>
+               <!-- Agenda (atividades): professor/admin/super -->
+               {% if role in ['ADMIN', 'COACH', 'SUPER_ADMIN'] %}
+               <li>
+                   <a href="{{ url_for('atividades.listar') }}"
+                      class="{% if ep.startswith('atividades') %}active{% endif %}">
+                       <span class="icon">📅</span> Agenda
+                   </a>
+               </li>
+               {% endif %}
 
-                <li><a href="{{ url_for('financeiro.fluxo_caixa') }}"
-                       class="{% if ep.startswith('financeiro') %}active{% endif %}">
-                    <span class="icon">💰</span> Fluxo de Caixa
-                </a></li>
+               <!-- Financeiro:
+                    - ADMIN/SUPER_ADMIN: visão completa
+                    - PARENT: atalho para mensalidades -->
+               {% if role in ['ADMIN', 'SUPER_ADMIN'] %}
+               <li>
+                   <a href="{{ url_for('financeiro.resumo') }}"
+                      class="{% if ep.startswith('financeiro') %}active{% endif %}">
+                       <span class="icon">💰</span> Financeiro
+                   </a>
+               </li>
+               {% elif role == 'PARENT' %}
+               <li>
+                   <a href="{{ url_for('financeiro.resumo_responsavel') }}"
+                      class="{% if ep == 'financeiro.resumo_responsavel' %}active{% endif %}">
+                       <span class="icon">💰</span> Minhas mensalidades
+                   </a>
+               </li>
+               {% endif %}
 
-                <li><a href="{{ url_for('usuarios_sistema.listar') }}"
-                       class="{% if ep.startswith('usuarios_sistema') %}active{% endif %}">
-                    <span class="icon">🧑‍💻</span> Usuários do Sistema
-                </a></li>
+               <!-- Usuários do Sistema: apenas ADMIN / SUPER_ADMIN -->
+               {% if role in ['ADMIN', 'SUPER_ADMIN'] %}
+               <li>
+                   <a href="{{ url_for('usuarios_sistema.listar') }}"
+                      class="{% if ep.startswith('usuarios_sistema') %}active{% endif %}">
+                       <span class="icon">🧑‍💻</span> Usuários do Sistema
+                   </a>
+               </li>
+               {% endif %}
 
-                <li><a href="{{ url_for('ia.index') }}"
-                       class="{% if ep.startswith('ia') %}active{% endif %}">
-                    <span class="icon">🤖</span> IA Coach
-                </a></li>
-            </ul>
-        </div>
+               <!-- IA Coach: professor/admin/super -->
+               {% if role in ['ADMIN', 'COACH', 'SUPER_ADMIN'] %}
+               <li>
+                   <a href="{{ url_for('ia.index') }}"
+                      class="{% if ep.startswith('ia') %}active{% endif %}">
+                       <span class="icon">🤖</span> IA Coach
+                   </a>
+               </li>
+               {% endif %}
+           </ul>
+           {% endif %}
+       </div>
 
-        {% if current_user.is_authenticated %}
-        <div class="sidebar-user">
-            <div class="sidebar-user-info">
-                <span class="sidebar-user-name">{{ current_user.nome }}</span>
-                <span class="sidebar-user-role">{{ current_user.role }}</span>
-            </div>
-            <div>
-                <div class="sidebar-user-status-pill">
-                    ● Online
-                </div>
-                <form method="post" action="{{ url_for('auth.logout') }}" style="margin-top:0.35rem;">
-                    <button type="submit" class="btn btn-sm btn-outline">Sair</button>
-                </form>
-            </div>
-        </div>
-        {% endif %}
-    </aside>
+       {% if current_user.is_authenticated %}
+       <div class="sidebar-user">
+           <div class="sidebar-user-info">
+               <span class="sidebar-user-name">{{ current_user.nome }}</span>
+               <span class="sidebar-user-role">{{ current_user.role }}</span>
+           </div>
+           <div>
+               <div class="sidebar-user-status-pill">
+                   ● Online
+               </div>
+               <form method="post" action="{{ url_for('auth.logout') }}" style="margin-top:0.35rem;">
+                   <button type="submit" class="btn btn-sm btn-outline">Sair</button>
+               </form>
+           </div>
+       </div>
+       {% endif %}
+   </aside>
 
-    <!-- MAIN -->
-    <main class="main">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            <div style="margin-bottom:0.75rem;">
-              {% for category, message in messages %}
-                <div class="badge badge-{{ 'danger' if category == 'error' else 'neutral' }}">{{ message }}</div>
-              {% endfor %}
-            </div>
-          {% endif %}
-        {% endwith %}
+   <!-- MAIN -->
+   <main class="main">
+       {% with messages = get_flashed_messages(with_categories=true) %}
+         {% if messages %}
+           <div style="margin-bottom:0.75rem;">
+             {% for category, message in messages %}
+               <div class="badge badge-{{ 'danger' if category == 'error' else 'neutral' }}">{{ message }}</div>
+             {% endfor %}
+           </div>
+         {% endif %}
+       {% endwith %}
 
-        {% block content %}{% endblock %}
-    </main>
+       {% block content %}{% endblock %}
+   </main>
 </div>
 {% else %}
-    {% block content %}{% endblock %}
+   {% block content %}{% endblock %}
 {% endif %}
+
+<!-- JS da câmera (usado na tela de atleta) -->
+<script src="{{ url_for('static', filename='js/camera.js') }}"></script>
 </body>
 </html>

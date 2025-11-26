@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}IA Coach{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">IA Coach</h1>
+        <p class="page-subtitle">
+            Use a IA para obter ideias de treinos e apoio à gestão financeira da escolinha.
+        </p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" class="form-grid">
+            <div class="form-group">
+                <label for="tipo">Tipo de ajuda</label>
+                <select id="tipo" name="tipo" class="form-control">
+                    <option value="treino">Sugestão de treino</option>
+                    <option value="financeiro">Ajuda financeira</option>
+                </select>
+            </div>
+
+            <div class="form-group form-group-full">
+                <label for="pergunta">Descreva o que você precisa</label>
+                <textarea id="pergunta" name="pergunta" rows="3" class="form-control"
+                          placeholder="Ex: Quero um treino para melhorar passes em crianças de 10 anos..."></textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Perguntar para a IA</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if resposta %}
+<div class="card" style="margin-top:1rem;">
+    <div class="card-body">
+        <h3 style="font-size:1rem; margin-bottom:0.5rem;">Resposta (simulada)</h3>
+        <pre style="white-space:pre-wrap; font-size:0.85rem;">{{ resposta }}</pre>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

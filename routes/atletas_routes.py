@@ -1,13 +1,13 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
-from flask_login import login_required
+from flask_login import login_required, current_user
 from extensions import db
-from models import Atleta, Grupo, AtletaGrupo, AtletaFoto
+from models import Atleta, Grupo, AtletaGrupo, AtletaFoto, Responsavel, AtletaResponsavel
 from datetime import datetime
 import os
 import base64
 from werkzeug.utils import secure_filename
 
-atletas_bp = Blueprint('atletas', __name__, url_prefix='/atletas')
+atletas_bp = Blueprint("atletas", __name__, url_prefix="/atletas")
 
 
 def salvar_foto_base64(foto_base64, atleta_id):
@@ -19,7 +19,7 @@ def salvar_foto_base64(foto_base64, atleta_id):
         return
 
     try:
-        header, data = foto_base64.split(',', 1)
+        header, data = foto_base64.split(",", 1)
     except ValueError:
         return
 
@@ -28,13 +28,13 @@ def salvar_foto_base64(foto_base64, atleta_id):
     except Exception:
         return
 
-    upload_dir = os.path.join(current_app.root_path, 'static', 'fotos_atletas')
+    upload_dir = os.path.join(current_app.root_path, "static", "fotos_atletas")
     os.makedirs(upload_dir, exist_ok=True)
 
     filename = f"atleta_{atleta_id}_{int(datetime.utcnow().timestamp())}.jpg"
     filepath = os.path.join(upload_dir, secure_filename(filename))
 
-    with open(filepath, 'wb') as f:
+    with open(filepath, "wb") as f:
         f.write(img_bytes)
 
     rel_path = f"fotos_atletas/{filename}"
@@ -42,56 +42,73 @@ def salvar_foto_base64(foto_base64, atleta_id):
     db.session.add(foto)
 
 
-@atletas_bp.route('/listar')
+@atletas_bp.route("/listar")
 @login_required
 def listar():
-    # no futuro aqui a gente filtra por escolinha e por responsável
-    atletas = Atleta.query.order_by(Atleta.nome).all()
-    return render_template('atletas_listar.html', atletas=atletas)
+    """
+    - ADMIN / COACH / SUPER_ADMIN: vêem todos os atletas (depois filtramos por escolinha).
+    - PARENT: vê apenas os atletas vinculados a ele (filhos).
+    """
+    if current_user.role == "PARENT":
+        # pega os atletas associados a este responsável
+        links = (
+            AtletaResponsavel.query.join(AtletaResponsavel.responsavel)
+            .filter(Responsavel.usuario_id == current_user.id)
+            .all()
+        )
+        ids = [l.atleta_id for l in links]
+        if ids:
+            atletas = Atleta.query.filter(Atleta.id.in_(ids)).order_by(Atleta.nome).all()
+        else:
+            atletas = []
+    else:
+        atletas = Atleta.query.order_by(Atleta.nome).all()
+
+    return render_template("atletas_listar.html", atletas=atletas, filtros={})
 
 
-@atletas_bp.route('/novo', methods=['GET', 'POST'])
+@atletas_bp.route("/novo", methods=["GET", "POST"])
 @login_required
 def novo():
     grupos = Grupo.query.order_by(Grupo.nome).all()
 
-    if request.method == 'POST':
-        nome = (request.form.get('nome') or '').strip()
-        dn = request.form.get('data_nascimento')
-        posicao = (request.form.get('posicao') or '').strip() or None
+    if request.method == "POST":
+        nome = (request.form.get("nome") or "").strip()
+        dn = request.form.get("data_nascimento")
+        posicao = (request.form.get("posicao") or "").strip() or None
 
-        rg = (request.form.get('rg') or '').strip() or None
-        cpf = (request.form.get('cpf') or '').strip() or None
+        rg = (request.form.get("rg") or "").strip() or None
+        cpf = (request.form.get("cpf") or "").strip() or None
 
-        telefone = (request.form.get('telefone') or '').strip() or None
-        validade_atestado_str = request.form.get('validade_atestado') or None
-        info_adicionais = (request.form.get('informacoes_adicionais') or '').strip() or None
+        telefone = (request.form.get("telefone") or "").strip() or None
+        validade_atestado_str = request.form.get("validade_atestado") or None
+        info_adicionais = (request.form.get("informacoes_adicionais") or "").strip() or None
 
-        resp_nome = (request.form.get('responsavel_nome') or '').strip() or None
-        resp_cpf = (request.form.get('responsavel_cpf') or '').strip() or None
-        resp_tel = (request.form.get('responsavel_telefone') or '').strip() or None
-        resp_parentesco = (request.form.get('responsavel_parentesco') or '').strip() or None
+        resp_nome = (request.form.get("responsavel_nome") or "").strip() or None
+        resp_cpf = (request.form.get("responsavel_cpf") or "").strip() or None
+        resp_tel = (request.form.get("responsavel_telefone") or "").strip() or None
+        resp_parentesco = (request.form.get("responsavel_parentesco") or "").strip() or None
 
-        grupos_ids = request.form.getlist('grupos_ids')
-        foto_base64 = request.form.get('foto_base64')
+        grupos_ids = request.form.getlist("grupos_ids")
+        foto_base64 = request.form.get("foto_base64")
 
         if not nome or not dn:
-            flash('Preencha nome e data de nascimento.', 'danger')
-            return redirect(url_for('atletas.novo'))
+            flash("Preencha nome e data de nascimento.", "danger")
+            return redirect(url_for("atletas.novo"))
 
         try:
-            data_nasc = datetime.strptime(dn, '%Y-%m-%d').date()
+            data_nasc = datetime.strptime(dn, "%Y-%m-%d").date()
         except ValueError:
-            flash('Data de nascimento inválida.', 'danger')
-            return redirect(url_for('atletas.novo'))
+            flash("Data de nascimento inválida.", "danger")
+            return redirect(url_for("atletas.novo"))
 
         validade_atestado = None
         if validade_atestado_str:
             try:
-                validade_atestado = datetime.strptime(validade_atestado_str, '%Y-%m-%d').date()
+                validade_atestado = datetime.strptime(validade_atestado_str, "%Y-%m-%d").date()
             except ValueError:
-                flash('Data de validade do atestado inválida.', 'danger')
-                return redirect(url_for('atletas.novo'))
+                flash("Data de validade do atestado inválida.", "danger")
+                return redirect(url_for("atletas.novo"))
 
         atleta = Atleta(
             nome=nome,
@@ -106,7 +123,7 @@ def novo():
             responsavel_cpf=resp_cpf,
             responsavel_telefone=resp_tel,
             responsavel_parentesco=resp_parentesco,
-            status='ATIVO'
+            status="ATIVO",
         )
 
         db.session.add(atleta)
@@ -123,57 +140,57 @@ def novo():
             salvar_foto_base64(foto_base64, atleta.id)
 
         db.session.commit()
-        flash('Atleta cadastrado com sucesso!', 'success')
-        return redirect(url_for('atletas.listar'))
+        flash("Atleta cadastrado com sucesso!", "success")
+        return redirect(url_for("atletas.listar"))
 
-    return render_template('atletas_novo.html', atleta=None, grupos=grupos)
+    return render_template("atletas_novo.html", atleta=None, grupos=grupos, grupos_do_atleta=set(), foto_atual=None)
 
 
-@atletas_bp.route('/<int:atleta_id>/editar', methods=['GET', 'POST'])
+@atletas_bp.route("/<int:atleta_id>/editar", methods=["GET", "POST"])
 @login_required
 def editar(atleta_id):
     atleta = Atleta.query.get_or_404(atleta_id)
     grupos = Grupo.query.order_by(Grupo.nome).all()
     grupos_do_atleta = {ag.grupo_id for ag in atleta.grupos}
 
-    if request.method == 'POST':
-        nome = (request.form.get('nome') or '').strip()
-        dn = request.form.get('data_nascimento')
-        posicao = (request.form.get('posicao') or '').strip() or None
+    if request.method == "POST":
+        nome = (request.form.get("nome") or "").strip()
+        dn = request.form.get("data_nascimento")
+        posicao = (request.form.get("posicao") or "").strip() or None
 
-        rg = (request.form.get('rg') or '').strip() or None
-        cpf = (request.form.get('cpf') or '').strip() or None
+        rg = (request.form.get("rg") or "").strip() or None
+        cpf = (request.form.get("cpf") or "").strip() or None
 
-        telefone = (request.form.get('telefone') or '').strip() or None
-        validade_atestado_str = request.form.get('validade_atestado') or None
-        info_adicionais = (request.form.get('informacoes_adicionais') or '').strip() or None
+        telefone = (request.form.get("telefone") or "").strip() or None
+        validade_atestado_str = request.form.get("validade_atestado") or None
+        info_adicionais = (request.form.get("informacoes_adicionais") or "").strip() or None
 
-        resp_nome = (request.form.get('responsavel_nome') or '').strip() or None
-        resp_cpf = (request.form.get('responsavel_cpf') or '').strip() or None
-        resp_tel = (request.form.get('responsavel_telefone') or '').strip() or None
-        resp_parentesco = (request.form.get('responsavel_parentesco') or '').strip() or None
+        resp_nome = (request.form.get("responsavel_nome") or "").strip() or None
+        resp_cpf = (request.form.get("responsavel_cpf") or "").strip() or None
+        resp_tel = (request.form.get("responsavel_telefone") or "").strip() or None
+        resp_parentesco = (request.form.get("responsavel_parentesco") or "").strip() or None
 
-        grupos_ids = request.form.getlist('grupos_ids')
-        foto_base64 = request.form.get('foto_base64')
-        status = request.form.get('status') or atleta.status
+        grupos_ids = request.form.getlist("grupos_ids")
+        foto_base64 = request.form.get("foto_base64")
+        status = request.form.get("status") or atleta.status
 
         if not nome or not dn:
-            flash('Preencha nome e data de nascimento.', 'danger')
-            return redirect(url_for('atletas.editar', atleta_id=atleta.id))
+            flash("Preencha nome e data de nascimento.", "danger")
+            return redirect(url_for("atletas.editar", atleta_id=atleta.id))
 
         try:
-            data_nasc = datetime.strptime(dn, '%Y-%m-%d').date()
+            data_nasc = datetime.strptime(dn, "%Y-%m-%d").date()
         except ValueError:
-            flash('Data de nascimento inválida.', 'danger')
-            return redirect(url_for('atletas.editar', atleta_id=atleta.id))
+            flash("Data de nascimento inválida.", "danger")
+            return redirect(url_for("atletas.editar", atleta_id=atleta.id))
 
         validade_atestado = None
         if validade_atestado_str:
             try:
-                validade_atestado = datetime.strptime(validade_atestado_str, '%Y-%m-%d').date()
+                validade_atestado = datetime.strptime(validade_atestado_str, "%Y-%m-%d").date()
             except ValueError:
-                flash('Data de validade do atestado inválida.', 'danger')
-                return redirect(url_for('atletas.editar', atleta_id=atleta.id))
+                flash("Data de validade do atestado inválida.", "danger")
+                return redirect(url_for("atletas.editar", atleta_id=atleta.id))
 
         atleta.nome = nome
         atleta.data_nascimento = data_nasc
@@ -201,16 +218,16 @@ def editar(atleta_id):
             salvar_foto_base64(foto_base64, atleta.id)
 
         db.session.commit()
-        flash('Dados do atleta atualizados!', 'success')
-        return redirect(url_for('atletas.listar'))
+        flash("Dados do atleta atualizados!", "success")
+        return redirect(url_for("atletas.listar"))
 
     # pega última foto (se existir)
     foto_atual = atleta.fotos[-1].foto_path if atleta.fotos else None
 
     return render_template(
-        'atletas_novo.html',
+        "atletas_novo.html",
         atleta=atleta,
         grupos=grupos,
         grupos_do_atleta=grupos_do_atleta,
-        foto_atual=foto_atual
+        foto_atual=foto_atual,
     )
