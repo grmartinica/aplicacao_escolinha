@@ -6,11 +6,10 @@
     <div>
         <h1 class="page-title">Financeiro</h1>
         <p class="page-subtitle">
-            Acompanhe mensalidades pagas, pendentes e faça cobranças via WhatsApp ou Pix.
+            Contas a receber (mensalidades) e contas a pagar (despesas) da escolinha.
         </p>
     </div>
     <div class="page-header-actions">
-        <!-- Exportar: Excel, CSV, PDF, Word -->
         <div class="btn-group">
             <a href="{{ url_for('financeiro.exportar', formato='excel') }}" class="btn btn-secondary">
                 Excel
@@ -26,8 +25,11 @@
             </a>
         </div>
 
-        <a href="{{ url_for('financeiro.nova_despesa') }}" class="btn btn-primary">
-            + Adicionar despesa
+        <a href="{{ url_for('financeiro.nova_cobranca') }}" class="btn btn-primary">
+            + Nova cobrança
+        </a>
+        <a href="{{ url_for('financeiro.nova_despesa') }}" class="btn btn-secondary">
+            + Nova despesa
         </a>
     </div>
 </div>
@@ -79,7 +81,8 @@
     </div>
 </div>
 
-<div class="card" style="margin-top:1rem;">
+<h2 class="section-title" style="margin-top:1.5rem;">Contas a receber</h2>
+<div class="card">
     <div class="card-body">
         {% if itens %}
         <table class="table table-striped">
@@ -141,6 +144,54 @@
         {% else %}
             <p class="empty-state">
                 Nenhum lançamento encontrado com os filtros atuais.
+            </p>
+        {% endif %}
+    </div>
+</div>
+
+<h2 class="section-title" style="margin-top:2rem;">Contas a pagar</h2>
+<div class="card">
+    <div class="card-body">
+        {% if despesas %}
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Fornecedor</th>
+                <th>Descrição</th>
+                <th>Vencimento</th>
+                <th>Valor</th>
+                <th>Status</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for d in despesas %}
+            <tr>
+                <td>{{ d.fornecedor }}</td>
+                <td>{{ d.descricao or '—' }}</td>
+                <td>
+                    {% if d.vencimento %}
+                        {{ d.vencimento.strftime('%d/%m/%Y') }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+                <td>R$ {{ '%.2f'|format(d.valor or 0) }}</td>
+                <td>
+                    {% if d.status == 'PENDENTE' %}
+                        <span class="badge badge-danger">PENDENTE</span>
+                    {% elif d.status == 'PAGO' %}
+                        <span class="badge badge-success">PAGO</span>
+                    {% else %}
+                        <span class="badge badge-neutral">{{ d.status }}</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <p class="empty-state">
+                Nenhuma despesa cadastrada ainda.
             </p>
         {% endif %}
     </div>

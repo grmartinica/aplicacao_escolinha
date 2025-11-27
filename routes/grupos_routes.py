@@ -3,11 +3,93 @@ from flask_login import login_required, current_user
 from extensions import db
 from models import Grupo
 
+import io
+import pandas as pd
+from docx import Document
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from reportlab.lib import colors
+
 grupos_bp = Blueprint("grupos", __name__, url_prefix="/grupos")
 
 
 def _require_staff():
     return current_user.role in ("ADMIN", "COACH", "SUPER_ADMIN")
+
+
+def gerar_arquivo_tabular(nome_base, formato, headers, rows):
+    formato = (formato or "csv").lower()
+
+    if formato == "csv":
+        linhas = [";".join(headers)]
+        for r in rows:
+            linha = ";".join("" if v is None else str(v) for v in r)
+            linhas.append(linha)
+        csv_data = "\n".join(linhas)
+        resp = make_response(csv_data)
+        resp.headers["Content-Type"] = "text/csv; charset=utf-8"
+        resp.headers["Content-Disposition"] = f'attachment; filename="{nome_base}.csv"'
+        return resp
+
+    if formato == "excel":
+        df = pd.DataFrame(rows, columns=headers)
+        buf = io.BytesIO()
+        with pd.ExcelWriter(buf, engine="openpyxl") as writer:
+            df.to_excel(writer, index=False, sheet_name="Dados")
+        buf.seek(0)
+        resp = make_response(buf.getvalue())
+        resp.headers["Content-Type"] = (
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+        resp.headers["Content-Disposition"] = f'attachment; filename="{nome_base}.xlsx"'
+        return resp
+
+    if formato == "word":
+        doc = Document()
+        doc.add_heading(nome_base, level=1)
+        table = doc.add_table(rows=1, cols=len(headers))
+        hdr_cells = table.rows[0].cells
+        for i, h in enumerate(headers):
+            hdr_cells[i].text = h
+        for r in rows:
+            row_cells = table.add_row().cells
+            for i, v in enumerate(r):
+                row_cells[i].text = "" if v is None else str(v)
+        buf = io.BytesIO()
+        doc.save(buf)
+        buf.seek(0)
+        resp = make_response(buf.getvalue())
+        resp.headers["Content-Type"] = (
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        )
+        resp.headers["Content-Disposition"] = f'attachment; filename="{nome_base}.docx"'
+        return resp
+
+    if formato == "pdf":
+        buf = io.BytesIO()
+        doc = SimpleDocTemplate(buf, pagesize=A4)
+        data = [headers] + [[("" if v is None else str(v)) for v in r] for r in rows]
+        table = Table(data)
+        style = TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1e293b")),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTSIZE", (0, 0), (-1, 0), 10),
+                ("BOTTOMPADDING", (0, 0), (-1, 0), 6),
+                ("GRID", (0, 0), (-1, -1), 0.25, colors.grey),
+            ]
+        )
+        table.setStyle(style)
+        doc.build([table])
+        buf.seek(0)
+        resp = make_response(buf.getvalue())
+        resp.headers["Content-Type"] = "application/pdf"
+        resp.headers["Content-Disposition"] = f'attachment; filename="{nome_base}.pdf"'
+        return resp
+
+    return gerar_arquivo_tabular(nome_base, "csv", headers, rows)
 
 
 @grupos_bp.route("/listar")
@@ -91,26 +173,19 @@ def exportar():
         flash("Você não tem permissão para exportar grupos.", "danger")
         return redirect(url_for("dashboard.index"))
 
-    formato = (request.args.get("formato") or "csv").lower()
-    ext_map = {"csv": "csv", "excel": "xlsx", "pdf": "pdf", "word": "docx"}
-    ext = ext_map.get(formato, "csv")
+    formato = request.args.get("formato", "csv")
 
     grupos = Grupo.query.order_by(Grupo.nome).all()
-    linhas = ["nome;faixa_etaria_min;faixa_etaria_max;descricao"]
-
+    headers = ["Nome", "Faixa etária mínima", "Faixa etária máxima", "Descrição"]
+    rows = []
     for g in grupos:
-        linha = ";".join(
+        rows.append(
             [
                 g.nome or "",
-                str(g.faixa_etaria_min or ""),
-                str(g.faixa_etaria_max or ""),
+                g.faixa_etaria_min or "",
+                g.faixa_etaria_max or "",
                 (g.descricao or "").replace("\n", " "),
             ]
         )
-        linhas.append(linha)
 
-    csv_data = "\n".join(linhas)
-    resp = make_response(csv_data)
-    resp.headers["Content-Type"] = "text/csv; charset=utf-8"
-    resp.headers["Content-Disposition"] = f'attachment; filename="grupos.{ext}"'
-    return resp
+    return gerar_arquivo_tabular("grupos", formato, headers, rows)

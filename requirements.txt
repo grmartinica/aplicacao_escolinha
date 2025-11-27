@@ -4,3 +4,8 @@ Flask-SQLAlchemy
 gunicorn
 pymysql
 mercadopago==2.2.0
+pandas
+openpyxl
+python-docx
+reportlab
+python-dateutil

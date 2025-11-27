@@ -15,6 +15,14 @@ from urllib.parse import quote
 from datetime import datetime
 import os
 
+# exportação multi-formato
+import io
+import pandas as pd
+from docx import Document
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from reportlab.lib import colors
+
 financeiro_bp = Blueprint("financeiro", __name__, url_prefix="/financeiro")
 
 
@@ -23,6 +31,85 @@ def _require_admin():
         flash("Você não tem permissão para essa operação financeira.", "danger")
         return False
     return True
+
+
+def gerar_arquivo_tabular(nome_base, formato, headers, rows):
+    formato = (formato or "csv").lower()
+
+    # CSV
+    if formato == "csv":
+        linhas = [";".join(headers)]
+        for r in rows:
+            linha = ";".join("" if v is None else str(v) for v in r)
+            linhas.append(linha)
+        csv_data = "\n".join(linhas)
+        resp = make_response(csv_data)
+        resp.headers["Content-Type"] = "text/csv; charset=utf-8"
+        resp.headers["Content-Disposition"] = f'attachment; filename="{nome_base}.csv"'
+        return resp
+
+    # Excel
+    if formato == "excel":
+        df = pd.DataFrame(rows, columns=headers)
+        buf = io.BytesIO()
+        with pd.ExcelWriter(buf, engine="openpyxl") as writer:
+            df.to_excel(writer, index=False, sheet_name="Dados")
+        buf.seek(0)
+        resp = make_response(buf.getvalue())
+        resp.headers["Content-Type"] = (
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+        resp.headers["Content-Disposition"] = f'attachment; filename="{nome_base}.xlsx"'
+        return resp
+
+    # Word
+    if formato == "word":
+        doc = Document()
+        doc.add_heading(nome_base, level=1)
+        table = doc.add_table(rows=1, cols=len(headers))
+        hdr_cells = table.rows[0].cells
+        for i, h in enumerate(headers):
+            hdr_cells[i].text = h
+        for r in rows:
+            row_cells = table.add_row().cells
+            for i, v in enumerate(r):
+                row_cells[i].text = "" if v is None else str(v)
+        buf = io.BytesIO()
+        doc.save(buf)
+        buf.seek(0)
+        resp = make_response(buf.getvalue())
+        resp.headers["Content-Type"] = (
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        )
+        resp.headers["Content-Disposition"] = f'attachment; filename="{nome_base}.docx"'
+        return resp
+
+    # PDF
+    if formato == "pdf":
+        buf = io.BytesIO()
+        doc = SimpleDocTemplate(buf, pagesize=A4)
+        data = [headers] + [[("" if v is None else str(v)) for v in r] for r in rows]
+        table = Table(data)
+        style = TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1e293b")),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTSIZE", (0, 0), (-1, 0), 10),
+                ("BOTTOMPADDING", (0, 0), (-1, 0), 6),
+                ("GRID", (0, 0), (-1, -1), 0.25, colors.grey),
+            ]
+        )
+        table.setStyle(style)
+        doc.build([table])
+        buf.seek(0)
+        resp = make_response(buf.getvalue())
+        resp.headers["Content-Type"] = "application/pdf"
+        resp.headers["Content-Disposition"] = f'attachment; filename="{nome_base}.pdf"'
+        return resp
+
+    return gerar_arquivo_tabular(nome_base, "csv", headers, rows)
 
 
 @financeiro_bp.route("/resumo")
@@ -35,6 +122,7 @@ def resumo():
             total_pago=0,
             qtd_inad=0,
             itens=[],
+            despesas=[],
             filtros={},
         )
 
@@ -72,6 +160,8 @@ def resumo():
         ).count()
     )
 
+    despesas = ContaPagar.query.order_by(ContaPagar.vencimento.desc()).limit(200).all()
+
     filtros = {
         "nome": nome,
         "status": status,
@@ -84,6 +174,7 @@ def resumo():
         total_pago=float(total_pago),
         qtd_inad=qtd_inad,
         itens=itens,
+        despesas=despesas,
         filtros=filtros,
     )
 
@@ -108,18 +199,13 @@ def resumo_responsavel():
     return render_template("financeiro_responsavel.html", itens=itens)
 
 
-# --------- Exportar financeiro (Excel/CSV/PDF/Word) ---------
-
-
 @financeiro_bp.route("/exportar")
 @login_required
 def exportar():
     if not _require_admin():
         return redirect(url_for("financeiro.resumo"))
 
-    formato = (request.args.get("formato") or "csv").lower()
-    ext_map = {"csv": "csv", "excel": "xlsx", "pdf": "pdf", "word": "docx"}
-    ext = ext_map.get(formato, "csv")
+    formato = request.args.get("formato", "csv")
 
     itens = (
         ContaReceber.query.join(ContaReceber.atleta, isouter=True)
@@ -127,11 +213,12 @@ def exportar():
         .all()
     )
 
-    linhas = ["aluno;vencimento;valor;status"]
+    headers = ["Aluno", "Vencimento", "Valor", "Status"]
+    rows = []
     for c in itens:
         nome = c.atleta.nome if c.atleta else ""
         ven = c.vencimento.strftime("%d/%m/%Y") if c.vencimento else ""
-        linha = ";".join(
+        rows.append(
             [
                 nome,
                 ven,
@@ -139,16 +226,8 @@ def exportar():
                 c.status or "",
             ]
         )
-        linhas.append(linha)
 
-    csv_data = "\n".join(linhas)
-    resp = make_response(csv_data)
-    resp.headers["Content-Type"] = "text/csv; charset=utf-8"
-    resp.headers["Content-Disposition"] = f'attachment; filename="financeiro.{ext}"'
-    return resp
-
-
-# --------- Cobrança via WhatsApp ---------
+    return gerar_arquivo_tabular("financeiro", formato, headers, rows)
 
 
 @financeiro_bp.route("/cobrar/<int:atleta_id>")
@@ -201,9 +280,6 @@ def cobrar_whatsapp(atleta_id):
 
     url = f"https://wa.me/55{telefone_digits}?text={quote(msg)}"
     return redirect(url)
-
-
-# --------- Mercado Pago PIX (QR Code + link) ---------
 
 
 @financeiro_bp.route("/gerar-pix/<int:conta_id>")
@@ -263,9 +339,6 @@ def gerar_pix(conta_id):
     )
 
 
-# --------- Despesas (contas a pagar simples) ---------
-
-
 @financeiro_bp.route("/despesa/nova", methods=["GET", "POST"])
 @login_required
 def nova_despesa():
@@ -308,3 +381,51 @@ def nova_despesa():
         return redirect(url_for("financeiro.resumo"))
 
     return render_template("financeiro_despesa_form.html")
+
+
+@financeiro_bp.route("/cobranca/nova", methods=["GET", "POST"])
+@login_required
+def nova_cobranca():
+    if not _require_admin():
+        return redirect(url_for("financeiro.resumo"))
+
+    atletas = Atleta.query.order_by(Atleta.nome).all()
+
+    if request.method == "POST":
+        from dateutil.relativedelta import relativedelta
+
+        atleta_id = request.form.get("atleta_id")
+        descricao = (request.form.get("descricao") or "").strip() or "Mensalidade"
+        valor_str = request.form.get("valor") or "0"
+        parcelas_str = request.form.get("parcelas") or "1"
+        venc_str = request.form.get("vencimento") or ""
+
+        if not atleta_id or not venc_str:
+            flash("Selecione o atleta e a data de vencimento.", "danger")
+            return redirect(url_for("financeiro.nova_cobranca"))
+
+        try:
+            atleta_id = int(atleta_id)
+            valor = float(valor_str.replace(",", "."))
+            parcelas = int(parcelas_str)
+            vencimento = datetime.strptime(venc_str, "%Y-%m-%d").date()
+        except ValueError:
+            flash("Verifique valor, parcelas e vencimento.", "danger")
+            return redirect(url_for("financeiro.nova_cobranca"))
+
+        for i in range(parcelas):
+            venci_parcela = vencimento + relativedelta(months=i)
+            conta = ContaReceber(
+                atleta_id=atleta_id,
+                descricao=f"{descricao} ({i+1}/{parcelas})" if parcelas > 1 else descricao,
+                vencimento=venci_parcela,
+                valor=valor,
+                status="PENDENTE",
+            )
+            db.session.add(conta)
+
+        db.session.commit()
+        flash("Cobrança(s) criada(s) com sucesso.", "success")
+        return redirect(url_for("financeiro.resumo"))
+
+    return render_template("financeiro_cobranca_form.html", atletas=atletas)

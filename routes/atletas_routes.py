@@ -17,6 +17,14 @@ import base64
 from werkzeug.utils import secure_filename
 from urllib.parse import quote
 
+# para exportação em múltiplos formatos
+import io
+import pandas as pd
+from docx import Document
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from reportlab.lib import colors
+
 atletas_bp = Blueprint("atletas", __name__, url_prefix="/atletas")
 
 
@@ -46,6 +54,93 @@ def salvar_foto_base64(foto_base64, atleta_id):
     rel_path = f"fotos_atletas/{filename}"
     foto = AtletaFoto(atleta_id=atleta_id, foto_path=rel_path)
     db.session.add(foto)
+
+
+def gerar_arquivo_tabular(nome_base, formato, headers, rows):
+    """
+    Gera arquivo em CSV, Excel (xlsx), Word (docx) ou PDF a partir
+    de headers (lista de strings) e rows (lista de listas).
+    """
+    formato = (formato or "csv").lower()
+
+    # CSV
+    if formato == "csv":
+        linhas = [";".join(headers)]
+        for r in rows:
+            linha = ";".join("" if v is None else str(v) for v in r)
+            linhas.append(linha)
+        csv_data = "\n".join(linhas)
+        resp = make_response(csv_data)
+        resp.headers["Content-Type"] = "text/csv; charset=utf-8"
+        resp.headers["Content-Disposition"] = f'attachment; filename="{nome_base}.csv"'
+        return resp
+
+    # Excel (xlsx)
+    if formato == "excel":
+        df = pd.DataFrame(rows, columns=headers)
+        buf = io.BytesIO()
+        with pd.ExcelWriter(buf, engine="openpyxl") as writer:
+            df.to_excel(writer, index=False, sheet_name="Dados")
+        buf.seek(0)
+        resp = make_response(buf.getvalue())
+        resp.headers["Content-Type"] = (
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+        resp.headers["Content-Disposition"] = f'attachment; filename="{nome_base}.xlsx"'
+        return resp
+
+    # Word (docx)
+    if formato == "word":
+        doc = Document()
+        doc.add_heading(nome_base, level=1)
+
+        table = doc.add_table(rows=1, cols=len(headers))
+        hdr_cells = table.rows[0].cells
+        for i, h in enumerate(headers):
+            hdr_cells[i].text = h
+
+        for r in rows:
+            row_cells = table.add_row().cells
+            for i, v in enumerate(r):
+                row_cells[i].text = "" if v is None else str(v)
+
+        buf = io.BytesIO()
+        doc.save(buf)
+        buf.seek(0)
+        resp = make_response(buf.getvalue())
+        resp.headers["Content-Type"] = (
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        )
+        resp.headers["Content-Disposition"] = f'attachment; filename="{nome_base}.docx"'
+        return resp
+
+    # PDF
+    if formato == "pdf":
+        buf = io.BytesIO()
+        doc = SimpleDocTemplate(buf, pagesize=A4)
+        data = [headers] + [[("" if v is None else str(v)) for v in r] for r in rows]
+        table = Table(data)
+        style = TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1e293b")),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTSIZE", (0, 0), (-1, 0), 10),
+                ("BOTTOMPADDING", (0, 0), (-1, 0), 6),
+                ("GRID", (0, 0), (-1, -1), 0.25, colors.grey),
+            ]
+        )
+        table.setStyle(style)
+        doc.build([table])
+        buf.seek(0)
+        resp = make_response(buf.getvalue())
+        resp.headers["Content-Type"] = "application/pdf"
+        resp.headers["Content-Disposition"] = f'attachment; filename="{nome_base}.pdf"'
+        return resp
+
+    # fallback: CSV
+    return gerar_arquivo_tabular(nome_base, "csv", headers, rows)
 
 
 @atletas_bp.route("/listar")
@@ -229,42 +324,29 @@ def editar(atleta_id):
     )
 
 
-# --------- Exportar (multi-formato: Excel, CSV, PDF, Word) ---------
-
-
 @atletas_bp.route("/exportar")
 @login_required
 def exportar():
-    """
-    Gera um arquivo texto em formato de tabela (CSV).
-    O 'formato' só muda a extensão do arquivo (Excel, CSV, PDF, Word),
-    mas o conteúdo é o mesmo CSV – o Excel, Word etc. abrem normalmente.
-    """
-    formato = (request.args.get("formato") or "csv").lower()
-    ext_map = {"csv": "csv", "excel": "xlsx", "pdf": "pdf", "word": "docx"}
-    ext = ext_map.get(formato, "csv")
+    formato = request.args.get("formato", "csv")
 
     atletas = Atleta.query.order_by(Atleta.nome).all()
-    linhas = ["nome;data_nascimento;posicao;responsavel;telefone"]
+    headers = ["Nome", "Data de nascimento", "Posição", "Responsável", "Telefone"]
 
+    rows = []
     for a in atletas:
         dn = a.data_nascimento.strftime("%d/%m/%Y") if a.data_nascimento else ""
-        linha = ";".join(
+        telefone = a.responsavel_telefone or a.telefone or ""
+        rows.append(
             [
                 a.nome or "",
                 dn,
                 a.posicao or "",
                 a.responsavel_nome or "",
-                a.responsavel_telefone or a.telefone or "",
+                telefone,
             ]
         )
-        linhas.append(linha)
 
-    csv_data = "\n".join(linhas)
-    resp = make_response(csv_data)
-    resp.headers["Content-Type"] = "text/csv; charset=utf-8"
-    resp.headers["Content-Disposition"] = f'attachment; filename="alunos.{ext}"'
-    return resp
+    return gerar_arquivo_tabular("alunos", formato, headers, rows)
 
 
 @atletas_bp.route("/importar", methods=["GET", "POST"])
@@ -275,9 +357,6 @@ def importar():
         return redirect(url_for("atletas.importar"))
 
     return render_template("atletas_importar.html")
-
-
-# --------- WhatsApp documentos pendentes ---------
 
 
 @atletas_bp.route("/cobrar-documentos/<int:atleta_id>")
