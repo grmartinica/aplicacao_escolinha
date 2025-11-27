@@ -59,6 +59,9 @@
             <a href="{{ url_for('financeiro.exportar', formato='word') }}" class="btn btn-secondary">
                 Word
             </a>
+            <a href="{{ url_for('financeiro.gerar_cobrancas_automaticas') }}" class="btn btn-primary">
+                Gerar cobranças deste mês
+            </a>
         </div>
 
         {% if current_user.role in ['ADMIN', 'SUPER_ADMIN'] %}

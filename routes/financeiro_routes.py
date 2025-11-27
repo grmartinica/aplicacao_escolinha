@@ -10,9 +10,17 @@ from flask import (
 from flask_login import login_required, current_user
 
 from extensions import db
-from models import ContaReceber, AtletaResponsavel, Atleta, Responsavel, ContaPagar
+from models import (
+    ContaReceber,
+    AtletaResponsavel,
+    Atleta,
+    Responsavel,
+    ContaPagar,
+    AtletaPlano,
+    Plano,
+)
 from urllib.parse import quote
-from datetime import datetime
+from datetime import datetime, date, timedelta
 import os
 
 # exportação multi-formato
@@ -113,6 +121,137 @@ def gerar_arquivo_tabular(nome_base, formato, headers, rows):
     # fallback
     return gerar_arquivo_tabular(nome_base, "csv", headers, rows)
 
+
+# =========================
+# Cobrança automática
+# =========================
+
+def primeiro_dia_util(ano: int, mes: int) -> date:
+    """
+    Retorna o primeiro dia útil (segunda a sexta) do mês/ano informado.
+    """
+    d = date(ano, mes, 1)
+    # weekday(): 0=segunda ... 6=domingo
+    while d.weekday() >= 5:  # 5=sábado, 6=domingo
+        d += timedelta(days=1)
+    return d
+
+
+def _gerar_cobrancas_para_mes(ano: int, mes: int) -> int:
+    """
+    Gera cobranças (ContaReceber) para todos atletas com plano ativo
+    na competência ano/mes. Não duplica se já existir para o mês.
+    Retorna a quantidade criada.
+    """
+    competencia = date(ano, mes, 1)
+    planos_ativos = AtletaPlano.query.filter_by(ativo=True).all()
+    criadas = 0
+
+    for ap in planos_ativos:
+        plano = ap.plano
+        atleta = ap.atleta
+
+        if not plano or not atleta:
+            continue
+
+        # não gera duplicado
+        existente = ContaReceber.query.filter_by(
+            atleta_id=atleta.id,
+            competencia=competencia,
+        ).first()
+        if existente:
+            continue
+
+        dia_venc = plano.dia_vencimento or 10
+        vencimento = date(ano, mes, dia_venc)
+
+        conta = ContaReceber(
+            atleta_id=atleta.id,
+            descricao=f"Mensalidade {plano.nome} {competencia.strftime('%m/%Y')}",
+            competencia=competencia,
+            vencimento=vencimento,
+            valor=plano.valor_mensal,
+            status="PENDENTE",
+            metodo_pagamento=plano.forma_pagamento_padrao,
+        )
+        db.session.add(conta)
+        criadas += 1
+
+    if criadas > 0:
+        db.session.commit()
+    return criadas
+
+
+# guarda em memória qual competência já processamos
+_ultima_competencia_processada = None
+
+
+@financeiro_bp.before_app_request
+def _auto_gerar_cobrancas_mes_atual():
+    """
+    Roda automaticamente a geração de cobranças no primeiro dia útil
+    do mês, na primeira requisição autenticada que bater na aplicação.
+
+    - Só roda se:
+        * usuário estiver logado (qualquer papel)
+        * hoje >= primeiro dia útil do mês
+        * ainda não processamos esta competência neste processo
+    """
+    global _ultima_competencia_processada
+
+    if not current_user.is_authenticated:
+        return
+
+    hoje = date.today()
+    competencia = date(hoje.year, hoje.month, 1)
+    primeiro_util = primeiro_dia_util(hoje.year, hoje.month)
+
+    # ainda não chegou o primeiro dia útil -> não gera nada
+    if hoje < primeiro_util:
+        return
+
+    if _ultima_competencia_processada == competencia:
+        return
+
+    criadas = _gerar_cobrancas_para_mes(hoje.year, hoje.month)
+    _ultima_competencia_processada = competencia
+
+    # sem flash aqui pra não poluir a experiência do usuário final
+    # (se quiser logar, pode usar print ou logging)
+
+
+@financeiro_bp.route("/gerar_cobrancas_automaticas")
+@login_required
+def gerar_cobrancas_automaticas():
+    """
+    Rota manual (fallback). Se quiser, nem precisa mostrar botão na interface.
+    """
+    if not _require_admin():
+        return redirect(url_for("financeiro.resumo"))
+
+    hoje = date.today()
+    competencia = date(hoje.year, hoje.month, 1)
+
+    criadas = _gerar_cobrancas_para_mes(hoje.year, hoje.month)
+
+    if criadas == 0:
+        flash(
+            f"Nenhuma cobrança nova criada para {competencia.strftime('%m/%Y')} "
+            f"(já existiam registros).",
+            "info",
+        )
+    else:
+        flash(
+            f"Cobranças geradas para {criadas} atleta(s) em {competencia.strftime('%m/%Y')}.",
+            "success",
+        )
+
+    return redirect(url_for("financeiro.resumo"))
+
+
+# =========================
+# RESUMO FINANCEIRO
+# =========================
 
 @financeiro_bp.route("/resumo")
 @login_required
@@ -233,14 +372,19 @@ def exportar():
     return gerar_arquivo_tabular("financeiro", formato, headers, rows)
 
 
+# =========================
+# COBRANÇA VIA WHATSAPP
+# =========================
+
 @financeiro_bp.route("/cobrar/<int:atleta_id>")
 @login_required
 def cobrar_whatsapp(atleta_id):
     """
     Cobrança via WhatsApp:
     - Soma pendências do atleta
-    - Cria um pagamento Pix único no Mercado Pago com valor total
+    - Cria um pagamento Pix único no Mercado Pago com valor total (se configurado)
     - Inclui o link dessa cobrança na mensagem do WhatsApp
+    - Ajuste para funcionar mesmo sem contato salvo (normalização do telefone)
     """
     if not _require_admin():
         return redirect(url_for("financeiro.resumo"))
@@ -271,10 +415,11 @@ def cobrar_whatsapp(atleta_id):
     nome_resp = atleta.responsavel_nome or "responsável"
     nome_atl = atleta.nome
 
-    # Gera um pagamento Pix único via Mercado Pago
+    # Gera um pagamento Pix único via Mercado Pago (se configurado)
     link_pagamento = ""
     try:
         import mercadopago
+
         access_token = os.getenv("MERCADOPAGO_ACCESS_TOKEN")
         if access_token:
             sdk = mercadopago.SDK(access_token)
@@ -313,7 +458,7 @@ def cobrar_whatsapp(atleta_id):
             "Se preferir, fale com a coordenação para combinar outra forma de pagamento."
         )
     else:
-        msg += (
+        msg +=(
             "Fale com a coordenação para combinar a melhor forma de quitação, "
             "ou informe um comprovante após o pagamento."
         )
@@ -321,13 +466,22 @@ def cobrar_whatsapp(atleta_id):
     telefone = (atleta.responsavel_telefone or atleta.telefone or "").strip()
     telefone_digits = "".join(ch for ch in telefone if ch.isdigit())
 
-    if not telefone_digits:
-        flash("Não há telefone cadastrado para este responsável.", "danger")
+    # Normaliza: mantém apenas os últimos 11 dígitos (DDD + número)
+    if len(telefone_digits) > 11:
+        telefone_digits = telefone_digits[-11:]
+
+    if len(telefone_digits) < 10:
+        flash("Não há telefone válido cadastrado para este responsável.", "danger")
         return redirect(url_for("financeiro.resumo"))
 
+    # Formato: wa.me/55DDDNÚMERO?text=...
     url = f"https://wa.me/55{telefone_digits}?text={quote(msg)}"
     return redirect(url)
 
+
+# =========================
+# PIX INDIVIDUAL (por cobrança)
+# =========================
 
 @financeiro_bp.route("/gerar-pix/<int:conta_id>")
 @login_required
@@ -385,6 +539,10 @@ def gerar_pix(conta_id):
         ticket_url=ticket_url,
     )
 
+
+# =========================
+# DESPESAS (CONTAS A PAGAR)
+# =========================
 
 @financeiro_bp.route("/despesa/nova", methods=["GET", "POST"])
 @login_required
@@ -453,6 +611,10 @@ def nova_despesa():
     return render_template("financeiro_despesa_form.html")
 
 
+# =========================
+# COBRANÇA MANUAL
+# =========================
+
 @financeiro_bp.route("/cobranca/nova", methods=["GET", "POST"])
 @login_required
 def nova_cobranca():
@@ -496,6 +658,7 @@ def nova_cobranca():
             conta = ContaReceber(
                 atleta_id=atleta_id,
                 descricao=desc_parcela,
+                competencia=date(venci_parcela.year, venci_parcela.month, 1),
                 vencimento=venci_parcela,
                 valor=valor,
                 status="PENDENTE",
