@@ -2,6 +2,42 @@
 {% block title %}Financeiro · Aurora Tech{% endblock %}
 
 {% block content %}
+<style>
+    /* Caixinhas dos KPIs – isolado só pra esta tela */
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    .kpi-card {
+        border-radius: 0.9rem;
+        padding: 1rem 1.25rem;
+        background: radial-gradient(circle at top left, #1d2440, #020617);
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.55);
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+    .kpi-label {
+        font-size: 0.8rem;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: #94a3b8;
+        font-weight: 500;
+    }
+    .kpi-value {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #e5e7eb;
+    }
+    .kpi-tag {
+        font-size: 0.75rem;
+        color: #a5b4fc;
+    }
+</style>
+
 <div class="page-header">
     <div>
         <h1 class="page-title">Financeiro</h1>
@@ -25,27 +61,32 @@
             </a>
         </div>
 
+        {% if current_user.role in ['ADMIN', 'SUPER_ADMIN'] %}
         <a href="{{ url_for('financeiro.nova_cobranca') }}" class="btn btn-primary">
             + Nova cobrança
         </a>
         <a href="{{ url_for('financeiro.nova_despesa') }}" class="btn btn-secondary">
             + Nova despesa
         </a>
+        {% endif %}
     </div>
 </div>
 
-<div class="kpis">
-    <div class="kpi">
-        <div class="t">Total pago</div>
-        <div class="v">R$ {{ '%.2f'|format(total_pago) }}</div>
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-label">Total pago</div>
+        <div class="kpi-value">R$ {{ '%.2f'|format(total_pago) }}</div>
+        <div class="kpi-tag">Mensalidades já recebidas</div>
     </div>
-    <div class="kpi">
-        <div class="t">Total pendente</div>
-        <div class="v">R$ {{ '%.2f'|format(total_pendente) }}</div>
+    <div class="kpi-card">
+        <div class="kpi-label">Total pendente</div>
+        <div class="kpi-value">R$ {{ '%.2f'|format(total_pendente) }}</div>
+        <div class="kpi-tag">Valor em aberto (pendente + atrasado)</div>
     </div>
-    <div class="kpi">
-        <div class="t">Alunos inadimplentes</div>
-        <div class="v">{{ qtd_inad }}</div>
+    <div class="kpi-card">
+        <div class="kpi-label">Alunos inadimplentes</div>
+        <div class="kpi-value">{{ qtd_inad }}</div>
+        <div class="kpi-tag">Com pelo menos uma mensalidade em atraso</div>
     </div>
 </div>
 
@@ -114,7 +155,7 @@
                     {% elif c.status == 'PAGO' %}
                         <span class="badge badge-success">{{ c.status }}</span>
                     {% else %}
-                        <span class="badge badge-neutral">{{ c.status }}</span>
+                        <span class="badge badge-neutral">{{ c.status or '—' }}</span>
                     {% endif %}
                 </td>
                 <td>
@@ -182,7 +223,7 @@
                     {% elif d.status == 'PAGO' %}
                         <span class="badge badge-success">PAGO</span>
                     {% else %}
-                        <span class="badge badge-neutral">{{ d.status }}</span>
+                        <span class="badge badge-neutral">{{ d.status or '—' }}</span>
                     {% endif %}
                 </td>
             </tr>

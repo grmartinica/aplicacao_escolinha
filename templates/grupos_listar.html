@@ -32,7 +32,7 @@
                 <th>Nome</th>
                 <th>Faixa etária</th>
                 <th>Descrição</th>
-                <th>Ações</th>
+                <th style="width: 220px;">Ações</th>
             </tr>
             </thead>
             <tbody>
@@ -51,6 +51,17 @@
                     <a href="{{ url_for('grupos.editar', grupo_id=g.id) }}" class="btn btn-sm btn-outline">
                         Editar
                     </a>
+
+                    <div class="btn-group btn-group-sm" style="margin-left: .25rem;">
+                        <a href="{{ url_for('grupos.exportar_grupo', grupo_id=g.id, formato='excel') }}"
+                           class="btn btn-secondary">
+                            Exportar grupo
+                        </a>
+                        <a href="{{ url_for('grupos.exportar_grupo', grupo_id=g.id, formato='pdf') }}"
+                           class="btn btn-secondary">
+                            PDF
+                        </a>
+                    </div>
                 </td>
             </tr>
             {% endfor %}

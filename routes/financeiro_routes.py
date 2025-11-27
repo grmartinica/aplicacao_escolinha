@@ -23,6 +23,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from reportlab.lib import colors
 
+
 financeiro_bp = Blueprint("financeiro", __name__, url_prefix="/financeiro")
 
 
@@ -109,12 +110,14 @@ def gerar_arquivo_tabular(nome_base, formato, headers, rows):
         resp.headers["Content-Disposition"] = f'attachment; filename="{nome_base}.pdf"'
         return resp
 
+    # fallback
     return gerar_arquivo_tabular(nome_base, "csv", headers, rows)
 
 
 @financeiro_bp.route("/resumo")
 @login_required
 def resumo():
+    # Se não for admin / super_admin, mostra só a visão "leiaute" sem ações
     if current_user.role not in ("ADMIN", "SUPER_ADMIN"):
         return render_template(
             "financeiro_resumo.html",
@@ -123,7 +126,7 @@ def resumo():
             qtd_inad=0,
             itens=[],
             despesas=[],
-            filtros={},
+            filtros={"nome": "", "status": "TODOS", "inadimplentes": "0"},
         )
 
     nome = (request.args.get("nome") or "").strip()
@@ -233,6 +236,12 @@ def exportar():
 @financeiro_bp.route("/cobrar/<int:atleta_id>")
 @login_required
 def cobrar_whatsapp(atleta_id):
+    """
+    Cobrança via WhatsApp:
+    - Soma pendências do atleta
+    - Cria um pagamento Pix único no Mercado Pago com valor total
+    - Inclui o link dessa cobrança na mensagem do WhatsApp
+    """
     if not _require_admin():
         return redirect(url_for("financeiro.resumo"))
 
@@ -262,14 +271,52 @@ def cobrar_whatsapp(atleta_id):
     nome_resp = atleta.responsavel_nome or "responsável"
     nome_atl = atleta.nome
 
+    # Gera um pagamento Pix único via Mercado Pago
+    link_pagamento = ""
+    try:
+        import mercadopago
+        access_token = os.getenv("MERCADOPAGO_ACCESS_TOKEN")
+        if access_token:
+            sdk = mercadopago.SDK(access_token)
+            description = f"Mensalidades em aberto - {nome_atl} ({meses_str})"
+
+            payment_data = {
+                "transaction_amount": total,
+                "description": description,
+                "payment_method_id": "pix",
+                "payer": {
+                    "email": "pagador@example.com",
+                },
+            }
+
+            result = sdk.payment().create(payment_data)
+            response = result.get("response", {})
+
+            if response.get("status") == "pending" and "point_of_interaction" in response:
+                data = response["point_of_interaction"]["transaction_data"]
+                link_pagamento = data.get("ticket_url", "")
+    except Exception:
+        # Se der qualquer erro na geração do Pix, segue sem o link
+        link_pagamento = ""
+
     msg = (
         f"Olá {nome_resp}, tudo bem?\n\n"
         f"O seu filho(a) {nome_atl} está com as seguintes pendências financeiras:\n"
         f"- Mensalidades de: {meses_str}\n"
         f"- Valor total em aberto: R$ {total:,.2f}\n\n"
-        "Segue abaixo o link para pagamento via Mercado Pago ou fale com a coordenação "
-        "para combinar a melhor forma de quitação."
     )
+
+    if link_pagamento:
+        msg += (
+            "Para facilitar, você pode pagar todas essas mensalidades no link abaixo:\n"
+            f"{link_pagamento}\n\n"
+            "Se preferir, fale com a coordenação para combinar outra forma de pagamento."
+        )
+    else:
+        msg += (
+            "Fale com a coordenação para combinar a melhor forma de quitação, "
+            "ou informe um comprovante após o pagamento."
+        )
 
     telefone = (atleta.responsavel_telefone or atleta.telefone or "").strip()
     telefone_digits = "".join(ch for ch in telefone if ch.isdigit())
@@ -342,14 +389,24 @@ def gerar_pix(conta_id):
 @financeiro_bp.route("/despesa/nova", methods=["GET", "POST"])
 @login_required
 def nova_despesa():
+    """
+    Cadastro de despesa com:
+    - parcelamento
+    - data de vencimento
+    - "método de pagamento" (armazenado no texto da descrição)
+    """
     if not _require_admin():
         return redirect(url_for("financeiro.resumo"))
 
     if request.method == "POST":
+        from dateutil.relativedelta import relativedelta
+
         fornecedor = (request.form.get("fornecedor") or "").strip()
         descricao = (request.form.get("descricao") or "").strip()
         venc_str = request.form.get("vencimento") or ""
         valor_str = request.form.get("valor") or "0"
+        parcelas_str = request.form.get("parcelas") or "1"
+        metodo = (request.form.get("metodo_pagamento") or "").strip()
 
         if not fornecedor or not venc_str:
             flash("Fornecedor e vencimento são obrigatórios.", "danger")
@@ -363,20 +420,33 @@ def nova_despesa():
 
         try:
             valor = float(valor_str.replace(",", "."))
+            parcelas = int(parcelas_str)
+            if parcelas < 1:
+                parcelas = 1
         except ValueError:
-            flash("Valor inválido.", "danger")
+            flash("Valor ou parcelas inválidas.", "danger")
             return redirect(url_for("financeiro.nova_despesa"))
 
-        conta = ContaPagar(
-            fornecedor=fornecedor,
-            descricao=descricao,
-            vencimento=vencimento,
-            valor=valor,
-            status="PENDENTE",
-        )
-        db.session.add(conta)
-        db.session.commit()
+        for i in range(parcelas):
+            venci_parcela = vencimento + relativedelta(months=i)
+            desc_parcela = descricao or "Despesa"
 
+            if parcelas > 1:
+                desc_parcela = f"{desc_parcela} ({i+1}/{parcelas})"
+
+            if metodo:
+                desc_parcela = f"{desc_parcela} · Pagamento: {metodo}"
+
+            conta = ContaPagar(
+                fornecedor=fornecedor,
+                descricao=desc_parcela,
+                vencimento=venci_parcela,
+                valor=valor,
+                status="PENDENTE",
+            )
+            db.session.add(conta)
+
+        db.session.commit()
         flash("Despesa registrada com sucesso.", "success")
         return redirect(url_for("financeiro.resumo"))
 
@@ -386,6 +456,9 @@ def nova_despesa():
 @financeiro_bp.route("/cobranca/nova", methods=["GET", "POST"])
 @login_required
 def nova_cobranca():
+    """
+    Cria mensalidades (ContaReceber) com possibilidade de parcelas.
+    """
     if not _require_admin():
         return redirect(url_for("financeiro.resumo"))
 
@@ -408,6 +481,8 @@ def nova_cobranca():
             atleta_id = int(atleta_id)
             valor = float(valor_str.replace(",", "."))
             parcelas = int(parcelas_str)
+            if parcelas < 1:
+                parcelas = 1
             vencimento = datetime.strptime(venc_str, "%Y-%m-%d").date()
         except ValueError:
             flash("Verifique valor, parcelas e vencimento.", "danger")
@@ -415,9 +490,12 @@ def nova_cobranca():
 
         for i in range(parcelas):
             venci_parcela = vencimento + relativedelta(months=i)
+            desc_parcela = (
+                f"{descricao} ({i+1}/{parcelas})" if parcelas > 1 else descricao
+            )
             conta = ContaReceber(
                 atleta_id=atleta_id,
-                descricao=f"{descricao} ({i+1}/{parcelas})" if parcelas > 1 else descricao,
+                descricao=desc_parcela,
                 vencimento=venci_parcela,
                 valor=valor,
                 status="PENDENTE",

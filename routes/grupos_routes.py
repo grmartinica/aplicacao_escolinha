@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, make_response
 from flask_login import login_required, current_user
 from extensions import db
-from models import Grupo
+from models import Grupo, Atleta, AtletaGrupo
 
 import io
 import pandas as pd
@@ -9,6 +9,7 @@ from docx import Document
 from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from reportlab.lib import colors
+
 
 grupos_bp = Blueprint("grupos", __name__, url_prefix="/grupos")
 
@@ -189,3 +190,56 @@ def exportar():
         )
 
     return gerar_arquivo_tabular("grupos", formato, headers, rows)
+
+
+@grupos_bp.route("/<int:grupo_id>/exportar")
+@login_required
+def exportar_grupo(grupo_id):
+    """
+    Exporta um único grupo com todos os atletas vinculados
+    (nome, posição, CPF/RG, data de nascimento, responsável, telefone).
+    """
+    if not _require_staff():
+        flash("Você não tem permissão para exportar grupos.", "danger")
+        return redirect(url_for("dashboard.index"))
+
+    formato = request.args.get("formato", "csv")
+    grupo = Grupo.query.get_or_404(grupo_id)
+
+    # Busca atletas vinculados ao grupo
+    atletas = (
+        Atleta.query.join(AtletaGrupo, Atleta.id == AtletaGrupo.atleta_id)
+        .filter(AtletaGrupo.grupo_id == grupo.id)
+        .order_by(Atleta.nome)
+        .all()
+    )
+
+    headers = [
+        "Grupo",
+        "Nome do atleta",
+        "Posição",
+        "CPF",
+        "RG",
+        "Data de nascimento",
+        "Responsável",
+        "Telefone",
+    ]
+    rows = []
+    for a in atletas:
+        dn = a.data_nascimento.strftime("%d/%m/%Y") if getattr(a, "data_nascimento", None) else ""
+        telefone = a.responsavel_telefone or a.telefone or ""
+        rows.append(
+            [
+                grupo.nome,
+                a.nome or "",
+                a.posicao or "",
+                a.cpf or "",
+                a.rg or "",
+                dn,
+                a.responsavel_nome or "",
+                telefone,
+            ]
+        )
+
+    nome_base = f"grupo_{grupo.id}_{grupo.nome.replace(' ', '_')}"
+    return gerar_arquivo_tabular(nome_base, formato, headers, rows)

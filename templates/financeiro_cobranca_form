@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Nova cobrança · Financeiro{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Nova cobrança</h1>
+        <p class="page-subtitle">
+            Gere mensalidades com uma ou mais parcelas para um atleta.
+        </p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" class="form-grid">
+            <div class="form-group">
+                <label for="atleta_id">Atleta</label>
+                <select id="atleta_id" name="atleta_id" class="form-control" required>
+                    <option value="">Selecione...</option>
+                    {% for a in atletas %}
+                    <option value="{{ a.id }}">{{ a.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="descricao">Descrição</label>
+                <input type="text" id="descricao" name="descricao" class="form-control"
+                       placeholder="Mensalidade" />
+            </div>
+
+            <div class="form-group">
+                <label for="valor">Valor da parcela</label>
+                <input type="text" id="valor" name="valor" class="form-control"
+                       placeholder="0,00" required />
+            </div>
+
+            <div class="form-group">
+                <label for="parcelas">Parcelas</label>
+                <input type="number" id="parcelas" name="parcelas" class="form-control"
+                       min="1" max="24" value="1" />
+            </div>
+
+            <div class="form-group">
+                <label for="vencimento">1º vencimento</label>
+                <input type="date" id="vencimento" name="vencimento" class="form-control" required />
+            </div>
+
+            <div class="form-actions form-group-full">
+                <a href="{{ url_for('financeiro.resumo') }}" class="btn btn-outline">Cancelar</a>
+                <button type="submit" class="btn btn-primary">Salvar cobrança</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
