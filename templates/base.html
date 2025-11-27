@@ -128,9 +128,16 @@
                 <div class="sidebar-user-status-pill">
                     ● Online
                 </div>
-                <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline" style="margin-top:0.35rem;">
-                    Sair
-                </a>
+                <div style="display:flex; gap:0.35rem; margin-top:0.35rem; flex-wrap:wrap;">
+                    <a href="{{ url_for('auth.alterar_senha') }}"
+                       class="btn btn-sm btn-outline">
+                        Alterar senha
+                    </a>
+                    <a href="{{ url_for('auth.logout') }}"
+                       class="btn btn-sm btn-outline">
+                        Sair
+                    </a>
+                </div>
             </div>
         </div>
         {% endif %}

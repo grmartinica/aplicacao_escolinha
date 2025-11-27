@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash
-from flask_login import login_user, logout_user, login_required
+from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from extensions import db, login_manager
@@ -147,3 +147,39 @@ def cadastro_responsavel_criar_usuario(responsavel_id):
         return redirect(url_for("auth.login"))
 
     return render_template("cadastro_responsavel_usuario.html", responsavel=resp)
+
+@auth_bp.route("/alterar-senha", methods=["GET", "POST"])
+@login_required
+def alterar_senha():
+    """
+    Permite que o próprio usuário troque a senha:
+    - precisa informar a senha atual
+    - nova senha e confirmação
+    """
+    if request.method == "POST":
+        senha_atual = request.form.get("senha_atual") or ""
+        nova_senha = request.form.get("nova_senha") or ""
+        confirmar_senha = request.form.get("confirmar_senha") or ""
+
+        if not senha_atual or not nova_senha or not confirmar_senha:
+            flash("Preencha todos os campos.", "danger")
+            return redirect(url_for("auth.alterar_senha"))
+
+        if nova_senha != confirmar_senha:
+            flash("A nova senha e a confirmação não conferem.", "danger")
+            return redirect(url_for("auth.alterar_senha"))
+
+        # Ajuste aqui o nome do campo de senha do seu model (senha_hash, password_hash, etc.)
+        if not check_password_hash(current_user.senha_hash, senha_atual):
+            flash("Senha atual incorreta.", "danger")
+            return redirect(url_for("auth.alterar_senha"))
+
+        current_user.senha_hash = generate_password_hash(nova_senha)
+        db.session.commit()
+
+        flash("Senha alterada com sucesso! Faça login novamente com a nova senha.", "success")
+        # opcional: forçar novo login
+        logout_user()
+        return redirect(url_for("auth.login"))
+
+    return render_template("alterar_senha.html")

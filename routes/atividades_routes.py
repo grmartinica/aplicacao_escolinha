@@ -11,7 +11,7 @@ atividades_bp = Blueprint("atividades", __name__, url_prefix="/atividades")
 
 def _require_staff():
     """
-    Apenas ADMIN, COACH e SUPER_ADMIN podem criar atividades
+    Apenas ADMIN, COACH e SUPER_ADMIN podem criar/editar atividades
     e registrar presenças.
     """
     return current_user.role in ("ADMIN", "COACH", "SUPER_ADMIN")
@@ -23,11 +23,8 @@ def listar():
     """
     Lista todas as atividades cadastradas, agrupando por dia.
     - Ordena da mais recente para a mais antiga.
-    - Entrega tanto 'atividades' quanto 'atividades_por_dia' para o template,
-      para garantir compatibilidade com diferentes versões de layout.
+    - Envia 'atividades' e 'atividades_por_dia' para o template.
     """
-    # Para o momento, todos os perfis veem a mesma lista.
-    # Se quiser, depois filtramos por role (responsável, professor etc.).
     atividades = (
         Atividade.query.order_by(Atividade.data.desc(), Atividade.hora_inicio.desc()).all()
     )
@@ -48,13 +45,8 @@ def listar():
 def nova():
     """
     Cadastro de nova atividade:
-    - Título
-    - Grupo
-    - Data
-    - Hora de início
-    - Local
-    - Descrição
-    - Repetição semanal (opcional), com número de repetições
+    - título, grupo, data, hora de início, local, descrição
+    - opção de repetir semanalmente por N semanas
     """
     if not _require_staff():
         flash("Você não tem permissão para cadastrar atividades.", "danger")
@@ -111,7 +103,61 @@ def nova():
         flash("Atividade criada com sucesso!", "success")
         return redirect(url_for("atividades.listar"))
 
-    return render_template("atividades_nova.html", grupos=grupos)
+    # importante: mandar atividade=None pro template
+    return render_template("atividades_nova.html", grupos=grupos, atividade=None)
+
+
+@atividades_bp.route("/<int:atividade_id>/editar", methods=["GET", "POST"])
+@login_required
+def editar(atividade_id):
+    """
+    Edição de uma atividade já existente.
+    Reaproveita o mesmo formulário de criação.
+    """
+    if not _require_staff():
+        flash("Você não tem permissão para editar atividades.", "danger")
+        return redirect(url_for("atividades.listar"))
+
+    atividade = Atividade.query.get_or_404(atividade_id)
+    grupos = Grupo.query.order_by(Grupo.nome).all()
+
+    if request.method == "POST":
+        titulo = (request.form.get("titulo") or "").strip()
+        grupo_id = request.form.get("grupo_id", type=int)
+        data_str = request.form.get("data")
+        hora_inicio_str = request.form.get("hora_inicio")
+        local = (request.form.get("local") or "").strip() or None
+        descricao = (request.form.get("descricao") or "").strip() or None
+
+        if not all([titulo, grupo_id, data_str, hora_inicio_str]):
+            flash("Preencha título, grupo, data e hora inicial.", "danger")
+            return redirect(url_for("atividades.editar", atividade_id=atividade.id))
+
+        try:
+            data_atividade = datetime.strptime(data_str, "%Y-%m-%d").date()
+        except ValueError:
+            flash("Data da atividade inválida.", "danger")
+            return redirect(url_for("atividades.editar", atividade_id=atividade.id))
+
+        try:
+            hora_inicio = datetime.strptime(hora_inicio_str, "%H:%M").time()
+        except ValueError:
+            flash("Hora de início inválida.", "danger")
+            return redirect(url_for("atividades.editar", atividade_id=atividade.id))
+
+        atividade.titulo = titulo
+        atividade.grupo_id = grupo_id
+        atividade.data = data_atividade
+        atividade.hora_inicio = hora_inicio
+        atividade.local = local
+        atividade.descricao = descricao
+
+        db.session.commit()
+        flash("Atividade atualizada com sucesso!", "success")
+        return redirect(url_for("atividades.listar"))
+
+    # reaproveita o mesmo template da criação
+    return render_template("atividades_nova.html", grupos=grupos, atividade=atividade)
 
 
 @atividades_bp.route("/<int:atividade_id>/presencas", methods=["GET", "POST"])
