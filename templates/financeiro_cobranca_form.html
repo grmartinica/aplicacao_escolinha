@@ -19,7 +19,10 @@
                 <select id="atleta_id" name="atleta_id" class="form-control" required>
                     <option value="">Selecione...</option>
                     {% for a in atletas %}
-                    <option value="{{ a.id }}">{{ a.nome }}</option>
+                    <option value="{{ a.id }}"
+                            {% if atleta_selecionado and a.id == atleta_selecionado.id %}selected{% endif %}>
+                        {{ a.nome }}
+                    </option>
                     {% endfor %}
                 </select>
             </div>

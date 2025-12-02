@@ -37,6 +37,48 @@
 
 <div class="card">
     <div class="card-body">
+
+        <div class="filters mb-3">
+            <form method="get" class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">Nome</label>
+                    <input type="text"
+                           name="nome"
+                           class="form-control"
+                           placeholder="Buscar por nome"
+                           value="{{ filtros.nome or '' }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Grupo</label>
+                    <select name="grupo_id" class="form-select">
+                        <option value="">Todos</option>
+                        {% for g in grupos %}
+                            <option value="{{ g.id }}"
+                                    {% if filtros.grupo_id and filtros.grupo_id|int == g.id %}selected{% endif %}>
+                                {{ g.nome }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Idade</label>
+                    <input type="number"
+                           name="idade"
+                           class="form-control"
+                           min="1"
+                           value="{{ filtros.idade or '' }}">
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-grow-1 mt-4">
+                        Filtrar
+                    </button>
+                    <a href="{{ url_for('atletas.listar') }}" class="btn btn-outline-secondary mt-4">
+                        Limpar
+                    </a>
+                </div>
+            </form>
+        </div>
+
         {% if atletas %}
         <table class="table table-striped">
             <thead>
@@ -80,21 +122,23 @@
                     {% endif %}
                 </td>
                 <td>
-                    <a href="{{ url_for('atletas.editar', atleta_id=a.id) }}" class="btn btn-sm btn-outline">
-                        Ver / Editar
-                    </a>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <a href="{{ url_for('atletas.editar', atleta_id=a.id) }}" class="btn btn-outline-primary">
+                            Ver / Editar
+                        </a>
 
-                    <a href="{{ url_for('atletas.cobrar_documentos', atleta_id=a.id) }}"
-                       class="btn btn-sm btn-secondary" target="_blank">
-                        Cobrar docs (WhatsApp)
-                    </a>
+                        <a href="{{ url_for('atletas.cobrar_documentos', atleta_id=a.id) }}"
+                            class="btn btn-outline-secondary" target="_blank">
+                            Cobrar docs
+                        </a>
 
-                    {% if a.tem_pend_financeira %}
-                    <a href="{{ url_for('financeiro.cobrar_whatsapp', atleta_id=a.id) }}"
-                       class="btn btn-sm btn-secondary" target="_blank">
-                        Cobrança financeira
-                    </a>
-                    {% endif %}
+                        {% if a.tem_pend_financeira %}
+                        <a href="{{ url_for('financeiro.cobrar_whatsapp', atleta_id=a.id) }}"
+                            class="btn btn-outline-danger" target="_blank">
+                            Cobrança financeira
+                        </a>
+                        {% endif %}
+                    </div>
                 </td>
             </tr>
             {% endfor %}

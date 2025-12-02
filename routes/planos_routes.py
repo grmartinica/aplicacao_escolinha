@@ -50,3 +50,48 @@ def novo():
         return redirect(url_for("planos.listar"))
 
     return render_template("planos_novo.html")
+
+
+@planos_bp.route("/<int:plano_id>/editar", methods=["GET", "POST"])
+@login_required
+def editar(plano_id):
+    plano = Plano.query.get_or_404(plano_id)
+
+    if request.method == "POST":
+        nome = (request.form.get("nome") or "").strip()
+        valor_str = (request.form.get("valor_mensal") or "0").replace(",", ".")
+        dia_vencimento = request.form.get("dia_vencimento", type=int)
+        forma_pagamento_padrao = (
+            request.form.get("forma_pagamento_padrao")
+            or plano.forma_pagamento_padrao
+        )
+        periodicidade_cobranca = (
+            request.form.get("periodicidade_cobranca")
+            or plano.periodicidade_cobranca
+        )
+        descricao = (request.form.get("descricao") or "").strip()
+        ativo = bool(request.form.get("ativo"))
+
+        if not nome or not dia_vencimento:
+            flash("Preencha nome e dia de vencimento.", "danger")
+            return redirect(url_for("planos.editar", plano_id=plano.id))
+
+        try:
+            valor_mensal = float(valor_str)
+        except ValueError:
+            flash("Valor mensal inválido.", "danger")
+            return redirect(url_for("planos.editar", plano_id=plano.id))
+
+        plano.nome = nome
+        plano.valor_mensal = valor_mensal
+        plano.dia_vencimento = dia_vencimento
+        plano.forma_pagamento_padrao = forma_pagamento_padrao
+        plano.periodicidade_cobranca = periodicidade_cobranca
+        plano.descricao = descricao or None
+        plano.ativo = ativo
+
+        db.session.commit()
+        flash("Plano atualizado com sucesso!", "success")
+        return redirect(url_for("planos.listar"))
+
+    return render_template("planos_editar.html", plano=plano)

@@ -11,13 +11,11 @@ from flask import (
 from flask_login import login_required, current_user
 from extensions import db
 from models import Atleta, Grupo, AtletaGrupo, AtletaFoto, Responsavel, AtletaResponsavel
-from datetime import datetime
+from datetime import datetime, date
 import os
 import base64
 from werkzeug.utils import secure_filename
 from urllib.parse import quote
-
-# para exportação em múltiplos formatos
 import io
 import pandas as pd
 from docx import Document
@@ -146,6 +144,16 @@ def gerar_arquivo_tabular(nome_base, formato, headers, rows):
 @atletas_bp.route("/listar")
 @login_required
 def listar():
+    """
+    Lista alunos com filtros por nome, grupo, idade e documentos pendentes.
+    - Pais: visualizam apenas seus filhos.
+    - Admin / Coach / Super Admin: visualizam todos os atletas.
+    """
+    nome = (request.args.get("nome") or "").strip()
+    grupo_id = request.args.get("grupo_id") or ""
+    idade_str = (request.args.get("idade") or "").strip()
+
+    # Base da consulta: restringe por responsável, quando for PARENT
     if current_user.role == "PARENT":
         links = (
             AtletaResponsavel.query.join(AtletaResponsavel.responsavel)
@@ -154,14 +162,72 @@ def listar():
         )
         ids = [l.atleta_id for l in links]
         if ids:
-            atletas = Atleta.query.filter(Atleta.id.in_(ids)).order_by(Atleta.nome).all()
+            query = Atleta.query.filter(Atleta.id.in_(ids))
         else:
-            atletas = []
+            # Nenhum atleta vinculado → retorna lista vazia
+            query = Atleta.query.filter(db.text("1 = 0"))
     else:
-        atletas = Atleta.query.order_by(Atleta.nome).all()
+        query = Atleta.query
 
-    return render_template("atletas_listar.html", atletas=atletas, filtros={})
+    # Filtro por nome
+    if nome:
+        query = query.filter(Atleta.nome.ilike(f"%{nome}%"))
 
+    # Filtro por grupo
+    if grupo_id:
+        try:
+            gid = int(grupo_id)
+            query = query.join(AtletaGrupo).filter(AtletaGrupo.grupo_id == gid)
+        except ValueError:
+            pass
+
+    atletas = query.order_by(Atleta.nome).all()
+
+    # Filtro por idade (em anos) aplicado em memória
+    idade = None
+    if idade_str:
+        try:
+            idade = int(idade_str)
+        except ValueError:
+            idade = None
+
+    if idade is not None:
+        hoje = date.today()
+        filtrados = []
+        for a in atletas:
+            if a.data_nascimento:
+                anos = (
+                    hoje.year
+                    - a.data_nascimento.year
+                    - (
+                        (hoje.month, hoje.day)
+                        < (a.data_nascimento.month, a.data_nascimento.day)
+                    )
+                )
+                if anos == idade:
+                    filtrados.append(a)
+        atletas = filtrados
+
+    # Filtro por documentos pendentes vindo do dashboard (docs=pendente)
+    docs = (request.args.get("docs") or "").strip()
+    if docs == "pendente":
+        atletas = [a for a in atletas if getattr(a, "docs_pendentes", False)]
+
+    filtros = {
+        "nome": nome,
+        "grupo_id": grupo_id,
+        "idade": idade_str,
+        "docs": docs,
+    }
+
+    grupos = Grupo.query.order_by(Grupo.nome).all()
+
+    return render_template(
+        "atletas_listar.html",
+        atletas=atletas,
+        filtros=filtros,
+        grupos=grupos,
+    )
 
 @atletas_bp.route("/novo", methods=["GET", "POST"])
 @login_required

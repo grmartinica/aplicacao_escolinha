@@ -7,7 +7,14 @@
         <h1 class="page-title">{{ atleta.nome }}</h1>
         <p class="page-subtitle">Ficha completa do atleta.</p>
     </div>
-    <a href="{{ url_for('atletas.editar', atleta_id=atleta.id) }}" class="btn btn-primary">Editar atleta</a>
+    <div class="page-header-actions">
+        <a href="{{ url_for('financeiro.nova_cobranca', atleta_id=atleta.id) }}" class="btn btn-secondary">
+            Nova cobrança
+        </a>
+        <a href="{{ url_for('atletas.editar', atleta_id=atleta.id) }}" class="btn btn-primary">
+            Editar atleta
+        </a>
+    </div>
 </div>
 
 <div class="card">

@@ -63,7 +63,7 @@ def nova():
         descricao = (request.form.get("descricao") or "").strip() or None
 
         repetir = request.form.get("repetir") == "on"
-        repeticoes = request.form.get("repeticoes", type=int) or 1  # número de semanas
+        repeticoes = 12 if repetir else 1
 
         if not all([titulo, grupo_id, data_str, hora_inicio_str]):
             flash("Preencha título, grupo, data e hora inicial.", "danger")

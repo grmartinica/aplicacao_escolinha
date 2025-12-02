@@ -27,7 +27,9 @@
         <div class="stat-label">Doc. pendente</div>
         <div class="stat-value">{{ documentos_pendentes }}</div>
         <div class="stat-meta">
-            <a href="{{ url_for('atletas.listar', docs='pendente') }}">Ver</a>
+            <a href="{{ url_for('atletas.listar', docs='pendente') }}" class="btn btn-link btn-sm">
+                Ver alunos
+            </a>
         </div>
     </div>
 
@@ -35,7 +37,9 @@
         <div class="stat-label">Alunos inadimplentes</div>
         <div class="stat-value">{{ qtd_inadimplentes }}</div>
         <div class="stat-meta">
-            <a href="{{ url_for('financeiro.resumo', filtro='inadimplente') }}">Ver todos</a>
+            <a href="{{ url_for('financeiro.resumo', inadimplentes='1') }}" class="btn btn-link btn-sm">
+                Ver alunos
+            </a>
         </div>
     </div>
 </div>

@@ -618,13 +618,11 @@ def nova_despesa():
 @financeiro_bp.route("/cobranca/nova", methods=["GET", "POST"])
 @login_required
 def nova_cobranca():
-    """
-    Cria mensalidades (ContaReceber) com possibilidade de parcelas.
-    """
-    if not _require_admin():
-        return redirect(url_for("financeiro.resumo"))
-
+    atleta_id_param = request.args.get("atleta_id", type=int)
     atletas = Atleta.query.order_by(Atleta.nome).all()
+    atleta_selecionado = None
+    if atleta_id_param:
+        atleta_selecionado = next((a for a in atletas if a.id == atleta_id_param), None)
 
     if request.method == "POST":
         from dateutil.relativedelta import relativedelta
